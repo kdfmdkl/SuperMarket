@@ -1,0 +1,272 @@
+### ============================================
+### 🧪 TEST AUDIT LOGS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### ============================================
+### 📋 2. GET ALL AUDIT LOGS
+### ============================================
+
+### 2.1 Admin - Get All Audit Logs (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Admin - Get Audit Logs with Pagination
+GET {{baseUrl}}/api/auditlogs?page=1&pageSize=50
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Filter by User
+GET {{baseUrl}}/api/auditlogs?userId=1
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Admin - Filter by Action
+GET {{baseUrl}}/api/auditlogs?action=CREATE
+Authorization: Bearer {{adminToken}}
+
+### 2.5 Admin - Filter by Table Name
+GET {{baseUrl}}/api/auditlogs?tableName=Products
+Authorization: Bearer {{adminToken}}
+
+### 2.6 Admin - Filter by Date Range
+GET {{baseUrl}}/api/auditlogs?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 2.7 Manager - Get Audit Logs (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs
+Authorization: Bearer {{managerToken}}
+
+### 2.8 No Token - Get Audit Logs (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/auditlogs
+
+### ============================================
+### 🔍 3. GET AUDIT LOG BY ID
+### ============================================
+
+### 3.1 Admin - Get Audit Log by ID (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/auditlogs/1
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Manager - Get Audit Log by ID (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/1
+Authorization: Bearer {{managerToken}}
+
+### 3.3 Admin - Get Non-existent Audit Log (Expected: 404 Not Found)
+GET {{baseUrl}}/api/auditlogs/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 👤 4. GET AUDIT LOGS BY USER
+### ============================================
+
+### 4.1 Admin - Get Logs by User (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/user/1
+Authorization: Bearer {{adminToken}}
+
+### 4.2 Admin - Get Logs by User with Date Range
+GET {{baseUrl}}/api/auditlogs/user/1?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 4.3 Manager - Get Logs by User (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/user/2
+Authorization: Bearer {{managerToken}}
+
+### 4.4 Admin - Get Logs by Non-existent User (Expected: 404 Not Found)
+GET {{baseUrl}}/api/auditlogs/user/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📊 5. GET AUDIT LOGS BY TABLE
+### ============================================
+
+### 5.1 Admin - Get Logs by Table (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/table/Products
+Authorization: Bearer {{adminToken}}
+
+### 5.2 Admin - Get Logs by Table with Record ID
+GET {{baseUrl}}/api/auditlogs/table/Products?recordId=1
+Authorization: Bearer {{adminToken}}
+
+### 5.3 Manager - Get Logs by Table (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/table/Users
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 🏷️ 6. GET ACTION TYPES
+### ============================================
+
+### 6.1 Admin - Get All Action Types (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/actions
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Manager - Get Action Types (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/actions
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 📑 7. GET TABLE NAMES
+### ============================================
+
+### 7.1 Admin - Get All Table Names (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/tables
+Authorization: Bearer {{adminToken}}
+
+### 7.2 Manager - Get Table Names (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/tables
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### ➕ 8. CREATE AUDIT LOG
+### ============================================
+
+### 8.1 Admin - Create Audit Log (Expected: 200 OK)
+POST {{baseUrl}}/api/auditlogs
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "userId": 1,
+  "action": "CREATE",
+  "tableName": "TestTable",
+  "recordId": 1,
+  "oldValue": null,
+  "newValue": "{\"name\": \"Test\"}",
+  "ipAddress": "192.168.1.1"
+}
+
+### 8.2 Admin - Create Audit Log without Action (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/auditlogs
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "tableName": "TestTable",
+  "recordId": 1
+}
+
+### 8.3 Manager - Create Audit Log (Expected: 200 OK)
+POST {{baseUrl}}/api/auditlogs
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "action": "UPDATE",
+  "tableName": "Products",
+  "recordId": 5
+}
+
+### ============================================
+### 🗑️ 9. CLEANUP OLD AUDIT LOGS
+### ============================================
+
+### 9.1 Admin - Cleanup Logs Before Date (Expected: 200 OK)
+DELETE {{baseUrl}}/api/auditlogs/cleanup?beforeDate=2023-01-01
+Authorization: Bearer {{adminToken}}
+
+### 9.2 Admin - Cleanup Default (1 year ago) (Expected: 200 OK)
+DELETE {{baseUrl}}/api/auditlogs/cleanup
+Authorization: Bearer {{adminToken}}
+
+### 9.3 Manager - Cleanup Logs (Expected: 403 Forbidden)
+DELETE {{baseUrl}}/api/auditlogs/cleanup
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 📈 10. GET STATISTICS
+### ============================================
+
+### 10.1 Admin - Get Statistics (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/statistics
+Authorization: Bearer {{adminToken}}
+
+### 10.2 Manager - Get Statistics (Expected: 200 OK)
+GET {{baseUrl}}/api/auditlogs/statistics
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến tương ứng
+### 4. Chạy các request test theo thứ tự
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+###
+### GET ALL:
+### [ ] Admin get all logs → 200 OK
+### [ ] Get with pagination → 200 OK
+### [ ] Filter by user → 200 OK
+### [ ] Filter by action → 200 OK
+### [ ] Filter by table → 200 OK
+### [ ] Filter by date → 200 OK
+### [ ] Manager access → 200 OK
+### [ ] No token → 401 Unauthorized
+###
+### GET BY ID:
+### [ ] Admin get log → 200 OK
+### [ ] Manager get log → 200 OK
+### [ ] Get non-existent → 404 Not Found
+###
+### GET BY USER:
+### [ ] Get logs by user → 200 OK
+### [ ] Get with date range → 200 OK
+### [ ] Manager access → 200 OK
+### [ ] Non-existent user → 404 Not Found
+###
+### GET BY TABLE:
+### [ ] Get logs by table → 200 OK
+### [ ] Get with record ID → 200 OK
+### [ ] Manager access → 200 OK
+###
+### ACTION TYPES:
+### [ ] Admin get actions → 200 OK
+### [ ] Manager get actions → 200 OK
+###
+### TABLE NAMES:
+### [ ] Admin get tables → 200 OK
+### [ ] Manager get tables → 200 OK
+###
+### CREATE:
+### [ ] Create valid log → 200 OK
+### [ ] Create without action → 400 Bad Request
+### [ ] Manager create → 200 OK
+###
+### CLEANUP:
+### [ ] Cleanup with date → 200 OK
+### [ ] Cleanup default → 200 OK
+### [ ] Manager cleanup → 403 Forbidden
+###
+### STATISTICS:
+### [ ] Admin get stats → 200 OK
+### [ ] Manager get stats → 200 OK
+###

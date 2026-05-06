@@ -1,0 +1,324 @@
+### ============================================
+### 🧾 TEST API INVOICES (POS Bán Hàng) - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@cashierToken = 
+@managerToken = 
+
+### ============================================
+### 🔐 1. LOGIN - Lấy Token
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Cashier
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cashier",
+  "password": "Cashier@123"
+}
+
+### ============================================
+### 📝 2. TẠO KHÁCH HÀNG MẪU (Chạy 1 lần)
+### ============================================
+
+### 2.1 Tạo khách hàng mới (dùng Admin token)
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fullName": "Nguyễn Văn A",
+  "phone": "0901234567",
+  "email": "nguyenvana@email.com"
+}
+
+### ============================================
+### 🛒 3. TẠO HÓA ĐƠN (POS)
+### ============================================
+
+### 3.1 Tạo hóa đơn đơn giản - Cashier
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 2,
+      "unitPrice": 0
+    }
+  ],
+  "paidAmount": 50000,
+  "paymentMethod": "CASH",
+  "note": "Khách mua lẻ"
+}
+
+### 3.2 Tạo hóa đơn có khách hàng + giảm giá
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "customerId": 1,
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 3,
+      "unitPrice": 0
+    },
+    {
+      "productId": 2,
+      "quantity": 1,
+      "unitPrice": 0
+    }
+  ],
+  "discountAmount": 5000,
+  "paidAmount": 100000,
+  "paymentMethod": "CASH",
+  "note": "Khách quen"
+}
+
+### 3.3 Tạo hóa đơn thanh toán thẻ
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 1,
+      "unitPrice": 0
+    }
+  ],
+  "paidAmount": 50000,
+  "paymentMethod": "CARD",
+  "note": "Thanh toán thẻ"
+}
+
+### 3.4 ❌ Tạo hóa đơn - Số tiền không đủ (Expected: 400)
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 10,
+      "unitPrice": 0
+    }
+  ],
+  "paidAmount": 1000,
+  "paymentMethod": "CASH"
+}
+
+### 3.5 ❌ Tạo hóa đơn - Sản phẩm không đủ kho (Expected: 400)
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 9999,
+      "unitPrice": 0
+    }
+  ],
+  "paidAmount": 100000000,
+  "paymentMethod": "CASH"
+}
+
+### 3.6 ❌ Tạo hóa đơn - Không có sản phẩm (Expected: 400)
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "items": [],
+  "paidAmount": 50000,
+  "paymentMethod": "CASH"
+}
+
+### ============================================
+### 📋 4. XEM DANH SÁCH HÓA ĐƠN
+### ============================================
+
+### 4.1 Admin xem tất cả hóa đơn
+GET {{baseUrl}}/api/invoices?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 4.2 Cashier chỉ xem hóa đơn của mình
+GET {{baseUrl}}/api/invoices
+Authorization: Bearer {{cashierToken}}
+
+### 4.3 Lọc hóa đơn theo ngày
+GET {{baseUrl}}/api/invoices?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 4.4 Lọc hóa đơn PAID
+GET {{baseUrl}}/api/invoices?status=PAID
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🔍 5. XEM CHI TIẾT HÓA ĐƠN
+### ============================================
+
+### 5.1 Xem chi tiết hóa đơn ID = 1
+GET {{baseUrl}}/api/invoices/1
+Authorization: Bearer {{adminToken}}
+
+### 5.2 Cashier xem hóa đơn của mình
+GET {{baseUrl}}/api/invoices/1
+Authorization: Bearer {{cashierToken}}
+
+### ============================================
+### 🔍 6. TÌM KIẾM HÓA ĐƠN
+### ============================================
+
+### 6.1 Tìm theo số hóa đơn
+GET {{baseUrl}}/api/invoices/search?keyword=INV
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Tìm theo tên khách hàng
+GET {{baseUrl}}/api/invoices/search?keyword=Nguyễn
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📊 7. BÁO CÁO DOANH THU
+### ============================================
+
+### 7.1 Báo cáo hôm nay
+GET {{baseUrl}}/api/invoices/reports/daily
+Authorization: Bearer {{adminToken}}
+
+### 7.2 Báo cáo ngày cụ thể
+GET {{baseUrl}}/api/invoices/reports/daily?date=2024-01-15
+Authorization: Bearer {{adminToken}}
+
+### 7.3 Manager xem báo cáo
+GET {{baseUrl}}/api/invoices/reports/daily
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### ❌ 8. HỦY HÓA ĐƠN
+### ============================================
+
+### 8.1 Admin hủy hóa đơn
+POST {{baseUrl}}/api/invoices/1/cancel
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "reason": "Khách hàng đổi ý"
+}
+
+### 8.2 Manager hủy hóa đơn
+POST {{baseUrl}}/api/invoices/2/cancel
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "reason": "Sản phẩm lỗi"
+}
+
+### 8.3 ❌ Cashier không được hủy (Expected: 403)
+POST {{baseUrl}}/api/invoices/1/cancel
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "reason": "Test permission"
+}
+
+### ============================================
+### ❌ 9. TEST KHÔNG TOKEN
+### ============================================
+
+### 9.1 Tạo hóa đơn không token (Expected: 401)
+POST {{baseUrl}}/api/invoices
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 1
+    }
+  ],
+  "paidAmount": 50000
+}
+
+### 9.2 Xem hóa đơn không token (Expected: 401)
+GET {{baseUrl}}/api/invoices
+
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+### 
+### Tạo Hóa Đơn:
+### [ ] Tạo hóa đơn thành công - CASH
+### [ ] Tạo hóa đơn thành công - CARD
+### [ ] Tạo hóa đơn có giảm giá
+### [ ] Tạo hóa đơn có khách hàng
+### [ ] ❌ Số tiền không đủ → 400
+### [ ] ❌ Hết hàng → 400
+### [ ] ❌ Không có sản phẩm → 400
+###
+### Xem Hóa Đơn:
+### [ ] Admin xem tất cả
+### [ ] Cashier chỉ xem của mình
+### [ ] Phân trang
+### [ ] Lọc theo ngày
+### [ ] Lọc theo status
+###
+### Chi Tiết:
+### [ ] Xem chi tiết thành công
+### [ ] Không tìm thấy → 404
+###
+### Tìm Kiếm:
+### [ ] Tìm theo số hóa đơn
+### [ ] Tìm theo tên khách
+###
+### Báo Cáo:
+### [ ] Xem báo cáo doanh thu
+### [ ] Thống kê theo phương thức thanh toán
+###
+### Hủy Hóa Đơn:
+### [ ] Admin hủy thành công
+### [ ] Manager hủy thành công
+### [ ] ❌ Cashier hủy → 403
+### [ ] Hủy lại hóa đơn đã hủy → 400
+###
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+###
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy lần lượt:
+###    - 1.1 Login Admin → Copy token vào @adminToken
+###    - 1.2 Login Cashier → Copy token vào @cashierToken
+###    - Chạy các test khác theo thứ tự
+###
+### LƯU Ý:
+### - Cần có products trong database trước khi test
+### - Cần seed customers trước khi test có customerId
+### - Kiểm tra stock quantity trước khi test bán hàng
+###
+### ============================================

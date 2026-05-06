@@ -1,0 +1,316 @@
+### ============================================
+### 🧪 TEST SHIFTS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@cashierToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### 1.3 Login Cashier
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cashier",
+  "password": "Cashier@123"
+}
+
+### ============================================
+### 📋 2. GET ALL SHIFTS
+### ============================================
+
+### 2.1 Admin - Get All Shifts (Expected: 200 OK)
+GET {{baseUrl}}/api/shifts
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Admin - Get Shifts with Pagination
+GET {{baseUrl}}/api/shifts?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Filter by Status
+GET {{baseUrl}}/api/shifts?status=OPEN
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Admin - Filter by Cashier
+GET {{baseUrl}}/api/shifts?cashierId=3
+Authorization: Bearer {{adminToken}}
+
+### 2.5 Admin - Filter by Date Range
+GET {{baseUrl}}/api/shifts?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 2.6 Cashier - Get Shifts (chỉ thấy ca của mình) (Expected: 200 OK)
+GET {{baseUrl}}/api/shifts
+Authorization: Bearer {{cashierToken}}
+
+### 2.7 No Token - Get Shifts (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/shifts
+
+### ============================================
+### 🔍 3. GET SHIFT BY ID
+### ============================================
+
+### 3.1 Admin - Get Shift by ID (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/shifts/1
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Cashier - Get Own Shift (Expected: 200 OK)
+GET {{baseUrl}}/api/shifts/1
+Authorization: Bearer {{cashierToken}}
+
+### 3.3 Cashier - Get Other's Shift (Expected: 403 Forbidden)
+GET {{baseUrl}}/api/shifts/2
+Authorization: Bearer {{cashierToken}}
+
+### 3.4 Admin - Get Non-existent Shift (Expected: 404 Not Found)
+GET {{baseUrl}}/api/shifts/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ⏱️ 4. GET CURRENT SHIFT
+### ============================================
+
+### 4.1 Cashier - Get Current Open Shift (Expected: 200 OK)
+GET {{baseUrl}}/api/shifts/current
+Authorization: Bearer {{cashierToken}}
+
+### 4.2 Admin - Get Current Shift (Expected: 200 OK)
+GET {{baseUrl}}/api/shifts/current
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🟢 5. OPEN SHIFT
+### ============================================
+
+### 5.1 Cashier - Open Shift (Expected: 200 OK)
+POST {{baseUrl}}/api/shifts/open
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "openingCash": 500000,
+  "note": "Ca làm việc buổi sáng"
+}
+
+### 5.2 Cashier - Open Shift with Zero Cash (Expected: 200 OK)
+POST {{baseUrl}}/api/shifts/open
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "openingCash": 0
+}
+
+### 5.3 Cashier - Open Shift when Already Open (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/shifts/open
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "openingCash": 1000000
+}
+
+### 5.4 No Token - Open Shift (Expected: 401 Unauthorized)
+POST {{baseUrl}}/api/shifts/open
+Content-Type: application/json
+
+{
+  "openingCash": 500000
+}
+
+### ============================================
+### 🔴 6. CLOSE SHIFT
+### ============================================
+
+### 6.1 Cashier - Close Shift (Expected: 200 OK)
+POST {{baseUrl}}/api/shifts/1/close
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "closingCash": 2500000,
+  "note": "Doanh thu ca sáng tốt"
+}
+
+### 6.2 Cashier - Close Other's Shift (Expected: 403 Forbidden)
+POST {{baseUrl}}/api/shifts/2/close
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "closingCash": 1000000
+}
+
+### 6.3 Admin - Close Any Shift (Expected: 200 OK)
+POST {{baseUrl}}/api/shifts/3/close
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "closingCash": 3000000
+}
+
+### 6.4 Cashier - Close Already Closed Shift (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/shifts/1/close
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "closingCash": 1000000
+}
+
+### 6.5 Cashier - Close Non-existent Shift (Expected: 404 Not Found)
+POST {{baseUrl}}/api/shifts/99999/close
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "closingCash": 1000000
+}
+
+### ============================================
+### ✏️ 7. UPDATE SHIFT
+### ============================================
+
+### 7.1 Admin - Update Shift Note (Expected: 200 OK)
+PUT {{baseUrl}}/api/shifts/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "note": "Ghi chú đã cập nhật bởi Admin"
+}
+
+### 7.2 Cashier - Update Own Shift (Expected: 200 OK)
+PUT {{baseUrl}}/api/shifts/1
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "note": "Ghi chú cập nhật bởi Cashier"
+}
+
+### 7.3 Cashier - Update Other's Shift (Expected: 403 Forbidden)
+PUT {{baseUrl}}/api/shifts/2
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "note": "Không được phép"
+}
+
+### 7.4 Admin - Update Non-existent Shift (Expected: 404 Not Found)
+PUT {{baseUrl}}/api/shifts/99999
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "note": "Test"
+}
+
+### ============================================
+### 📊 8. GET SHIFT REPORT
+### ============================================
+
+### 8.1 Admin - Get Shift Report (Expected: 200 OK)
+GET {{baseUrl}}/api/shifts/1/report
+Authorization: Bearer {{adminToken}}
+
+### 8.2 Cashier - Get Own Shift Report (Expected: 200 OK)
+GET {{baseUrl}}/api/shifts/1/report
+Authorization: Bearer {{cashierToken}}
+
+### 8.3 Cashier - Get Other's Shift Report (Expected: 403 Forbidden)
+GET {{baseUrl}}/api/shifts/2/report
+Authorization: Bearer {{cashierToken}}
+
+### 8.4 Admin - Get Non-existent Shift Report (Expected: 404 Not Found)
+GET {{baseUrl}}/api/shifts/99999/report
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến tương ứng
+### 4. Chạy các request test theo thứ tự
+###
+### WORKFLOW TEST:
+### 1. Open Shift → 2. Get Current Shift → 3. Close Shift
+### 4. Get Shift Report
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+###
+### GET ALL:
+### [ ] Admin get all shifts → 200 OK
+### [ ] Get with pagination → 200 OK
+### [ ] Filter by status → 200 OK
+### [ ] Filter by cashier → 200 OK
+### [ ] Filter by date → 200 OK
+### [ ] Cashier chỉ xem ca của mình → 200 OK
+### [ ] No token → 401 Unauthorized
+###
+### GET BY ID:
+### [ ] Admin get any shift → 200 OK
+### [ ] Cashier get own shift → 200 OK
+### [ ] Cashier get other's shift → 403 Forbidden
+### [ ] Get non-existent → 404 Not Found
+###
+### GET CURRENT:
+### [ ] Get current open shift → 200 OK
+###
+### OPEN SHIFT:
+### [ ] Open shift with cash → 200 OK
+### [ ] Open shift with zero → 200 OK
+### [ ] Open when already open → 400 Bad Request
+### [ ] No token → 401 Unauthorized
+###
+### CLOSE SHIFT:
+### [ ] Close own shift → 200 OK
+### [ ] Close other's shift (Cashier) → 403 Forbidden
+### [ ] Admin close any shift → 200 OK
+### [ ] Close already closed → 400 Bad Request
+### [ ] Close non-existent → 404 Not Found
+###
+### UPDATE:
+### [ ] Admin update any shift → 200 OK
+### [ ] Cashier update own shift → 200 OK
+### [ ] Cashier update other's → 403 Forbidden
+### [ ] Update non-existent → 404 Not Found
+###
+### SHIFT REPORT:
+### [ ] Admin get any report → 200 OK
+### [ ] Cashier get own report → 200 OK
+### [ ] Cashier get other's → 403 Forbidden
+### [ ] Get non-existent → 404 Not Found
+###

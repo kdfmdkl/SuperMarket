@@ -1,0 +1,117 @@
+# 🛒 POS API Test Guide - Quét mã vạch & QR Payment
+# @baseUrl = http://localhost:5000
+
+### ==================== LOGIN ====================
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### Lưu token vào biến
+@adminToken = {{login.response.body.token}}
+
+### ==================== 1. QUÉT MÃ VẠCH SẢN PHẨM ====================
+### Nhân viên dùng máy quét mã vạch để quét sản phẩm
+POST {{baseUrl}}/api/pos/scan-barcode
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "barcode": "123456789"
+}
+
+### ==================== 2. TẠO QR CODE THANH TOÁN (VietQR) ====================
+### Tạo mã QR theo chuẩn VietQR cho Vietcombank
+POST {{baseUrl}}/api/pos/qr-payment
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountNumber": "1234567890",
+  "accountName": "NGUYEN VAN A",
+  "bankName": "Vietcombank",
+  "bankBin": "970436",
+  "amount": 156000,
+  "description": "HD156"
+}
+
+### ==================== 3. TẠO QR CODE THANH TOÁN (Đơn giản) ====================
+### Tạo mã QR đơn giản (không theo chuẩn VietQR)
+POST {{baseUrl}}/api/pos/qr-payment
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountNumber": "1234567890",
+  "accountName": "CUA HANG MINI MART",
+  "bankName": "Vietcombank",
+  "amount": 250000,
+  "description": "Thanh toan hoa don"
+}
+
+### ==================== 4. LẤY DANH SÁCH NGÂN HÀNG ====================
+GET {{baseUrl}}/api/pos/banks
+
+### ==================== 5. XÁC NHẬN THANH TOÁN QR ====================
+POST {{baseUrl}}/api/pos/confirm-qr-payment
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "invoiceId": 1,
+  "referenceCode": "MB20240120103045",
+  "note": "Đã nhận tiền qua chuyển khoản MB Bank"
+}
+
+### ==================== QUY TRÌNH HOÀN CHỈNH ====================
+
+### Bước 1: Login để lấy token
+# (Chạy request "login" ở trên để lấy token)
+
+### Bước 2: Quét mã vạch từng sản phẩm
+# POST {{baseUrl}}/api/pos/scan-barcode
+# Gửi barcode của từng sản phẩm khách mua
+
+### Bước 3: Tạo hóa đơn
+# POST {{baseUrl}}/api/invoices
+# (Sử dụng InvoicesController để tạo hóa đơn)
+
+### Bước 4: Tạo mã QR thanh toán
+# POST {{baseUrl}}/api/pos/qr-payment
+# Hiển thị QR cho khách quét
+
+### Bước 5: Khách quét QR và chuyển khoản
+# (Khách dùng app ngân hàng để quét và chuyển khoản)
+
+### Bước 6: Xác nhận đã nhận tiền
+# POST {{baseUrl}}/api/pos/confirm-qr-payment
+# Nhân viên xác nhận đã nhận được tiền
+
+### ==================== MÃ BIN CÁC NGÂN HÀNG ====================
+# Vietcombank: 970436
+# Techcombank: 970407
+# BIDV: 970418
+# VietinBank: 970415
+# MB Bank: 970422
+# ACB: 970416
+# Sacombank: 970403
+# VPBank: 970432
+# TPBank: 970423
+# VIB: 970438
+# HD Bank: 970437
+# OCB: 970448
+# MSB: 970426
+# SHB: 970443
+# Eximbank: 970431
+# SCB: 970429
+
+### ==================== LƯU Ý ====================
+# 1. API /api/pos/scan-barcode yêu cầu permission "invoices.create"
+# 2. API /api/pos/qr-payment yêu cầu permission "invoices.create"
+# 3. Mã QR có hiệu lực 10 phút (ExpiresAt)
+# 4. Có thể dùng VietQR (có BankBin) hoặc QR đơn giản (không BankBin)
+# 5. QR trả về dạng base64 image, có thể hiển thị trực tiếp trên web/app

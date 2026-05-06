@@ -1,0 +1,228 @@
+### ============================================
+### 🧪 TEST QR LOGS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@cashierToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### 1.3 Login Cashier
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cashier",
+  "password": "Cashier@123"
+}
+
+### ============================================
+### 📋 2. GET ALL QR LOGS
+### ============================================
+
+### 2.1 Admin - Get All QR Logs (Expected: 200 OK)
+GET {{baseUrl}}/api/qrlogs
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Admin - Get QR Logs with Pagination
+GET {{baseUrl}}/api/qrlogs?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Filter by Account
+GET {{baseUrl}}/api/qrlogs?accountId=1
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Admin - Filter by User
+GET {{baseUrl}}/api/qrlogs?userId=3
+Authorization: Bearer {{adminToken}}
+
+### 2.5 Admin - Filter by Confirmation Status
+GET {{baseUrl}}/api/qrlogs?isConfirmed=true
+Authorization: Bearer {{adminToken}}
+
+### 2.6 Admin - Filter by Date Range
+GET {{baseUrl}}/api/qrlogs?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 2.7 Cashier - Get QR Logs (chỉ thấy của mình) (Expected: 200 OK)
+GET {{baseUrl}}/api/qrlogs
+Authorization: Bearer {{cashierToken}}
+
+### 2.8 No Token - Get QR Logs (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/qrlogs
+
+### ============================================
+### 🔍 3. GET QR LOG BY ID
+### ============================================
+
+### 3.1 Admin - Get QR Log by ID (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/qrlogs/1
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Cashier - Get Own QR Log (Expected: 200 OK)
+GET {{baseUrl}}/api/qrlogs/1
+Authorization: Bearer {{cashierToken}}
+
+### 3.3 Cashier - Get Other's QR Log (Expected: 403 Forbidden)
+GET {{baseUrl}}/api/qrlogs/2
+Authorization: Bearer {{cashierToken}}
+
+### 3.4 Admin - Get Non-existent QR Log (Expected: 404 Not Found)
+GET {{baseUrl}}/api/qrlogs/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ✅ 4. CONFIRM QR PAYMENT
+### ============================================
+
+### 4.1 Admin - Confirm QR Payment (Expected: 200 OK)
+POST {{baseUrl}}/api/qrlogs/1/confirm
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "referenceCode": "VCB123456789",
+  "note": "Đã xác nhận nhận tiền"
+}
+
+### 4.2 Manager - Confirm QR Payment (Expected: 200 OK)
+POST {{baseUrl}}/api/qrlogs/2/confirm
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "referenceCode": "TCB987654321",
+  "note": "Xác nhận thanh toán"
+}
+
+### 4.3 Cashier - Confirm QR Payment (Expected: 200 OK)
+POST {{baseUrl}}/api/qrlogs/3/confirm
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "referenceCode": "VTB456789123",
+  "note": "Khách đã chuyển khoản"
+}
+
+### 4.4 Admin - Confirm Non-existent QR Log (Expected: 404 Not Found)
+POST {{baseUrl}}/api/qrlogs/99999/confirm
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "referenceCode": "TEST123"
+}
+
+### ============================================
+### 📊 5. STATISTICS BY ACCOUNT
+### ============================================
+
+### 5.1 Admin - Statistics by Account (Expected: 200 OK)
+GET {{baseUrl}}/api/qrlogs/statistics/by-account
+Authorization: Bearer {{adminToken}}
+
+### 5.2 Admin - Statistics by Account with Date Range
+GET {{baseUrl}}/api/qrlogs/statistics/by-account?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 5.3 Manager - Statistics by Account (Expected: 200 OK)
+GET {{baseUrl}}/api/qrlogs/statistics/by-account
+Authorization: Bearer {{managerToken}}
+
+### 5.4 Cashier - Statistics by Account (Expected: 403 Forbidden)
+GET {{baseUrl}}/api/qrlogs/statistics/by-account
+Authorization: Bearer {{cashierToken}}
+
+### ============================================
+### 👤 6. STATISTICS BY USER
+### ============================================
+
+### 6.1 Admin - Statistics by User (Expected: 200 OK)
+GET {{baseUrl}}/api/qrlogs/statistics/by-user
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Admin - Statistics by User with Date Range
+GET {{baseUrl}}/api/qrlogs/statistics/by-user?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 6.3 Manager - Statistics by User (Expected: 200 OK)
+GET {{baseUrl}}/api/qrlogs/statistics/by-user
+Authorization: Bearer {{managerToken}}
+
+### 6.4 Cashier - Statistics by User (Expected: 403 Forbidden)
+GET {{baseUrl}}/api/qrlogs/statistics/by-user
+Authorization: Bearer {{cashierToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến tương ứng
+### 4. Chạy các request test theo thứ tự
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+###
+### GET ALL:
+### [ ] Admin get all logs → 200 OK
+### [ ] Get with pagination → 200 OK
+### [ ] Filter by account → 200 OK
+### [ ] Filter by user → 200 OK
+### [ ] Filter by confirmation → 200 OK
+### [ ] Filter by date → 200 OK
+### [ ] Cashier chỉ xem log của mình → 200 OK
+### [ ] No token → 401 Unauthorized
+###
+### GET BY ID:
+### [ ] Admin get any log → 200 OK
+### [ ] Cashier get own log → 200 OK
+### [ ] Cashier get other's log → 403 Forbidden
+### [ ] Get non-existent → 404 Not Found
+###
+### CONFIRM:
+### [ ] Admin confirm → 200 OK
+### [ ] Manager confirm → 200 OK
+### [ ] Cashier confirm → 200 OK
+### [ ] Confirm non-existent → 404 Not Found
+###
+### STATISTICS BY ACCOUNT:
+### [ ] Admin get stats → 200 OK
+### [ ] Admin get with date → 200 OK
+### [ ] Manager get stats → 200 OK
+### [ ] Cashier get stats → 403 Forbidden
+###
+### STATISTICS BY USER:
+### [ ] Admin get stats → 200 OK
+### [ ] Admin get with date → 200 OK
+### [ ] Manager get stats → 200 OK
+### [ ] Cashier get stats → 403 Forbidden
+###

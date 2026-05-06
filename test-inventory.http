@@ -1,0 +1,375 @@
+# ============================================
+# 🏭 INVENTORY API TEST - SuperMarketMini
+# ============================================
+# Hướng dẫn:
+# 1. Chạy ứng dụng: cd SuperMarketMini && dotnet run
+# 2. Cài extension "REST Client" trong VS Code
+# 3. Click "Send Request" trên từng request
+# 4. Copy token từ response và cập nhật vào @authToken
+# ============================================
+
+@baseUrl = http://localhost:5000
+@authToken = YOUR_TOKEN_HERE
+
+# ============================================
+# 1. AUTH - Login để lấy Token
+# ============================================
+
+### 1.1 Admin Login
+# @name adminLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Warehouse Login (có quyền inventory)
+# @name warehouseLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "warehouse",
+  "password": "Warehouse@123"
+}
+
+### 1.3 Cashier Login (chỉ xem, không điều chỉnh)
+# @name cashierLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cashier",
+  "password": "Cashier@123"
+}
+
+# ============================================
+# 2. INVENTORY - View Operations
+# Yêu cầu: inventory.view
+# ============================================
+
+### 2.1 Get All Inventory (Danh sách tồn kho)
+GET {{baseUrl}}/api/inventory
+Authorization: Bearer {{authToken}}
+
+### 2.2 Get Inventory by ID
+GET {{baseUrl}}/api/inventory/1
+Authorization: Bearer {{authToken}}
+
+### 2.3 Get Inventory by Product ID
+GET {{baseUrl}}/api/inventory/product/1
+Authorization: Bearer {{authToken}}
+
+### 2.4 Get Inventory with Filter (Low Stock)
+GET {{baseUrl}}/api/inventory?lowStockOnly=true
+Authorization: Bearer {{authToken}}
+
+### 2.5 Get Inventory with Pagination
+GET {{baseUrl}}/api/inventory?page=1&pageSize=10&sortBy=quantity&sortDesc=true
+Authorization: Bearer {{authToken}}
+
+### 2.6 Get Inventory by Category
+GET {{baseUrl}}/api/inventory?categoryId=1
+Authorization: Bearer {{authToken}}
+
+# ============================================
+# 3. INVENTORY - Stock Adjustment (Nhập/Xuất kho)
+# Yêu cầu: inventory.adjust
+# ============================================
+
+### 3.1 Stock In - Nhập kho (tăng số lượng)
+POST {{baseUrl}}/api/inventory/stock-in
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "quantity": 50,
+  "note": "Nhập kho đầu tháng - NCC A"
+}
+
+### 3.2 Stock Out - Xuất kho (giảm số lượng)
+POST {{baseUrl}}/api/inventory/stock-out
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "quantity": 10,
+  "note": "Xuất kho cho đơn hàng"
+}
+
+### 3.3 Adjust Inventory - IN (Nhập kho)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "changeType": "IN",
+  "quantity": 100,
+  "note": "Nhập kho từ nhà cung cấp",
+  "referenceId": 1
+}
+
+### 3.4 Adjust Inventory - OUT (Xuất kho)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "changeType": "OUT",
+  "quantity": 5,
+  "note": "Xuất kho bán hàng",
+  "referenceId": 1
+}
+
+### 3.5 Adjust Inventory - ADJUST (Điều chỉnh)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "changeType": "ADJUST",
+  "quantity": 50,
+  "note": "Điều chỉnh sau kiểm kê"
+}
+
+### 3.6 Bulk Adjust Inventory - Nhập kho hàng loạt
+POST {{baseUrl}}/api/inventory/adjust-bulk
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "changeType": "IN",
+  "note": "Nhập kho hàng loạt tháng 4/2024",
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 50
+    },
+    {
+      "productId": 2,
+      "quantity": 30
+    },
+    {
+      "productId": 3,
+      "quantity": 20
+    }
+  ]
+}
+
+### 3.7 Update Inventory Thresholds (Cập nhật ngưỡng)
+PUT {{baseUrl}}/api/inventory/1/thresholds
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "minQuantity": 10,
+  "maxQuantity": 500
+}
+
+# ============================================
+# 4. INVENTORY - Reports & Logs
+# Yêu cầu: inventory.view
+# ============================================
+
+### 4.1 Get Inventory Logs (Lịch sử thay đổi)
+GET {{baseUrl}}/api/inventory/logs
+Authorization: Bearer {{authToken}}
+
+### 4.2 Get Inventory Logs by Product
+GET {{baseUrl}}/api/inventory/logs?productId=1
+Authorization: Bearer {{authToken}}
+
+### 4.3 Get Inventory Logs by Change Type (IN/OUT/ADJUST)
+GET {{baseUrl}}/api/inventory/logs?changeType=IN
+Authorization: Bearer {{authToken}}
+
+### 4.4 Get Inventory Logs with Date Range
+GET {{baseUrl}}/api/inventory/logs?fromDate=2024-01-01&toDate=2024-12-31&page=1&pageSize=20
+Authorization: Bearer {{authToken}}
+
+### 4.5 Get Low Stock Items (Sắp hết hàng)
+GET {{baseUrl}}/api/inventory/low-stock
+Authorization: Bearer {{authToken}}
+
+### 4.6 Get Low Stock with Custom Threshold
+GET {{baseUrl}}/api/inventory/low-stock?threshold=20
+Authorization: Bearer {{authToken}}
+
+### 4.7 Get Out of Stock Items (Hết hàng)
+GET {{baseUrl}}/api/inventory/out-of-stock
+Authorization: Bearer {{authToken}}
+
+### 4.8 Get Inventory Summary (Thống kê tổng quan)
+GET {{baseUrl}}/api/inventory/summary
+Authorization: Bearer {{authToken}}
+
+### 4.9 Check Stock Availability
+GET {{baseUrl}}/api/inventory/check-stock?productId=1&quantity=10
+Authorization: Bearer {{authToken}}
+
+# ============================================
+# 5. ERROR TEST CASES
+# ============================================
+
+### 5.1 Adjust without permission (403 Forbidden)
+# Dùng token của Cashier (không có quyền inventory.adjust)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer CASHIER_TOKEN_HERE
+
+{
+  "productId": 1,
+  "changeType": "IN",
+  "quantity": 10
+}
+
+### 5.2 Adjust with invalid ChangeType (400 Bad Request)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "changeType": "INVALID",
+  "quantity": 10
+}
+
+### 5.3 Stock Out more than available (should fail)
+POST {{baseUrl}}/api/inventory/stock-out
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "quantity": 999999,
+  "note": "Test xuất quá số lượng"
+}
+
+### 5.4 Adjust non-existent product (404 Not Found)
+GET {{baseUrl}}/api/inventory/product/99999
+Authorization: Bearer {{authToken}}
+
+### 5.5 Missing required fields (400 Bad Request)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1
+}
+
+# ============================================
+# 6. PERMISSION TEST MATRIX
+# ============================================
+
+### 6.1 Admin - View Inventory (✅ Allowed)
+GET {{baseUrl}}/api/inventory
+Authorization: Bearer ADMIN_TOKEN_HERE
+
+### 6.2 Admin - Adjust Inventory (✅ Allowed)
+POST {{baseUrl}}/api/inventory/stock-in
+Content-Type: application/json
+Authorization: Bearer ADMIN_TOKEN_HERE
+
+{
+  "productId": 1,
+  "quantity": 10
+}
+
+### 6.3 Manager - View Inventory (✅ Allowed)
+GET {{baseUrl}}/api/inventory
+Authorization: Bearer MANAGER_TOKEN_HERE
+
+### 6.4 Manager - Adjust Inventory (✅ Allowed)
+POST {{baseUrl}}/api/inventory/stock-in
+Content-Type: application/json
+Authorization: Bearer MANAGER_TOKEN_HERE
+
+{
+  "productId": 1,
+  "quantity": 10
+}
+
+### 6.5 Warehouse - View Inventory (✅ Allowed)
+GET {{baseUrl}}/api/inventory
+Authorization: Bearer WAREHOUSE_TOKEN_HERE
+
+### 6.6 Warehouse - Adjust Inventory (✅ Allowed)
+POST {{baseUrl}}/api/inventory/stock-in
+Content-Type: application/json
+Authorization: Bearer WAREHOUSE_TOKEN_HERE
+
+{
+  "productId": 1,
+  "quantity": 10
+}
+
+### 6.7 Cashier - View Inventory (❌ Denied - Cashier không có inventory.view)
+GET {{baseUrl}}/api/inventory
+Authorization: Bearer CASHIER_TOKEN_HERE
+
+### 6.8 Cashier - Adjust Inventory (❌ Denied)
+POST {{baseUrl}}/api/inventory/stock-in
+Content-Type: application/json
+Authorization: Bearer CASHIER_TOKEN_HERE
+
+{
+  "productId": 1,
+  "quantity": 10
+}
+
+### 6.9 No Token - Any Endpoint (❌ 401 Unauthorized)
+GET {{baseUrl}}/api/inventory
+
+# ============================================
+# 7. TEST WORKFLOW - Complete Inventory Cycle
+# ============================================
+
+### Step 1: Check current inventory
+GET {{baseUrl}}/api/inventory/product/1
+Authorization: Bearer {{authToken}}
+
+### Step 2: Stock In - Add 100 units
+POST {{baseUrl}}/api/inventory/stock-in
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "quantity": 100,
+  "note": "Nhập kho ban đầu"
+}
+
+### Step 3: Verify inventory updated
+GET {{baseUrl}}/api/inventory/product/1
+Authorization: Bearer {{authToken}}
+
+### Step 4: Check logs
+GET {{baseUrl}}/api/inventory/logs?productId=1
+Authorization: Bearer {{authToken}}
+
+### Step 5: Stock Out - Sell 20 units
+POST {{baseUrl}}/api/inventory/stock-out
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "productId": 1,
+  "quantity": 20,
+  "note": "Bán hàng"
+}
+
+### Step 6: Verify final quantity
+GET {{baseUrl}}/api/inventory/product/1
+Authorization: Bearer {{authToken}}
+
+### Step 7: Check summary
+GET {{baseUrl}}/api/inventory/summary
+Authorization: Bearer {{authToken}}

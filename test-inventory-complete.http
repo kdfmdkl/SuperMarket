@@ -1,0 +1,521 @@
+### ============================================
+### 📦 TEST API INVENTORY (Quản lý Kho) - SuperMarketMini
+### ============================================
+### File: test-inventory-complete.http
+### Mô tả: Test đầy đủ cho Inventory API
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@staffToken = 
+
+### ============================================
+### 🔐 1. LOGIN - Lấy Token
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### 1.3 Login Staff (Warehouse Staff)
+# @name loginStaff
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "staff",
+  "password": "Staff@123"
+}
+
+### ============================================
+### 📦 2. LẤY DANH SÁCH TỒN KHO
+### Yêu cầu: Permission "inventory.view"
+### ============================================
+
+### 2.1 Lấy tất cả tồn kho (có phân trang)
+# Response: { Success: true, TotalCount, Page, PageSize, TotalPages, Data: InventoryDto[] }
+GET {{baseUrl}}/api/inventory?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Lọc theo tên sản phẩm
+GET {{baseUrl}}/api/inventory?searchKeyword=nước&page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Lọc theo danh mục
+GET {{baseUrl}}/api/inventory?categoryId=1&page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Lọc sản phẩm sắp hết hàng (low stock)
+GET {{baseUrl}}/api/inventory?isLowStock=true&page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.5 Lọc sản phẩm hết hàng (out of stock)
+GET {{baseUrl}}/api/inventory?isOutOfStock=true&page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.6 Sắp xếp theo số lượng tăng dần
+GET {{baseUrl}}/api/inventory?sortBy=quantity&sortOrder=asc&page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.7 Manager xem tồn kho
+GET {{baseUrl}}/api/inventory?page=1&pageSize=20
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 🔍 3. XEM CHI TIẾT TỒN KHO
+### Yêu cầu: Permission "inventory.view"
+### ============================================
+
+### 3.1 Lấy tồn kho theo ID
+# Response: { Success: true, Data: InventoryDto }
+GET {{baseUrl}}/api/inventory/1
+Authorization: Bearer {{adminToken}}
+
+### 3.2 ❌ Lấy tồn kho không tồn tại (Expected: 404)
+GET {{baseUrl}}/api/inventory/99999
+Authorization: Bearer {{adminToken}}
+
+### 3.3 Lấy tồn kho theo Product ID
+GET {{baseUrl}}/api/inventory/product/1
+Authorization: Bearer {{adminToken}}
+
+### 3.4 ❌ Lấy tồn kho theo Product ID không tồn tại (Expected: 404)
+GET {{baseUrl}}/api/inventory/product/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📝 4. ĐIỀU CHỈNH TỒN KHO (Nhập/Xuất/Điều chỉnh)
+### Yêu cầu: Permission "inventory.adjust"
+### ============================================
+
+### 4.1 Nhập kho (IN) - Tăng số lượng
+# Response: { Success: true, Message, Data: { ... } }
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 1,
+  "changeType": "IN",
+  "quantity": 50,
+  "note": "Nhập hàng từ nhà cung cấp A"
+}
+
+### 4.2 Xuất kho (OUT) - Giảm số lượng
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 1,
+  "changeType": "OUT",
+  "quantity": 10,
+  "note": "Xuất hàng cho đơn hàng đặc biệt"
+}
+
+### 4.3 Điều chỉnh tồn kho (ADJUST) - Set về giá trị cụ thể
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 1,
+  "changeType": "ADJUST",
+  "quantity": 100,
+  "note": "Kiểm kê định kỳ - điều chỉnh về đúng số lượng"
+}
+
+### 4.4 ❌ Xuất kho vượt quá tồn kho (Expected: 400)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 1,
+  "changeType": "OUT",
+  "quantity": 99999,
+  "note": "Test xuất quá số lượng"
+}
+
+### 4.5 ❌ Sản phẩm không tồn tại (Expected: 400)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 99999,
+  "changeType": "IN",
+  "quantity": 10,
+  "note": "Test sản phẩm không tồn tại"
+}
+
+### 4.6 ❌ ChangeType không hợp lệ (Expected: 400)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 1,
+  "changeType": "INVALID",
+  "quantity": 10,
+  "note": "Test change type không hợp lệ"
+}
+
+### 4.7 ❌ Số lượng <= 0 (Expected: 400)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 1,
+  "changeType": "IN",
+  "quantity": 0,
+  "note": "Test số lượng 0"
+}
+
+### 4.8 ❌ Staff không có quyền adjust (Expected: 403)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "productId": 1,
+  "changeType": "IN",
+  "quantity": 10,
+  "note": "Test permission"
+}
+
+### ============================================
+### 📦 5. NHẬP/XUẤT KHO HELPER ENDPOINTS
+### Yêu cầu: Permission "inventory.adjust"
+### ============================================
+
+### 5.1 Nhập kho - Stock In (Helper)
+POST {{baseUrl}}/api/inventory/stock-in
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 2,
+  "quantity": 30,
+  "note": "Nhập hàng tháng 1/2024"
+}
+
+### 5.2 Xuất kho - Stock Out (Helper)
+POST {{baseUrl}}/api/inventory/stock-out
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 2,
+  "quantity": 5,
+  "note": "Xuất hàng trả nhà cung cấp"
+}
+
+### 5.3 ❌ Xuất kho quá số lượng (Expected: 400)
+POST {{baseUrl}}/api/inventory/stock-out
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 2,
+  "quantity": 99999,
+  "note": "Test xuất quá"
+}
+
+### ============================================
+### 📊 6. ĐIỀU CHỈNH TỒN KHO HÀNG LOẠT
+### Yêu cầu: Permission "inventory.adjust"
+### ============================================
+
+### 6.1 Điều chỉnh nhiều sản phẩm cùng lúc
+POST {{baseUrl}}/api/inventory/adjust-bulk
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "changeType": "IN",
+      "quantity": 20,
+      "note": "Nhập hàng đợt 1"
+    },
+    {
+      "productId": 2,
+      "changeType": "IN",
+      "quantity": 30,
+      "note": "Nhập hàng đợt 1"
+    },
+    {
+      "productId": 3,
+      "changeType": "ADJUST",
+      "quantity": 50,
+      "note": "Kiểm kê"
+    }
+  ]
+}
+
+### 6.2 ❌ Điều chỉnh bulk với dữ liệu không hợp lệ
+POST {{baseUrl}}/api/inventory/adjust-bulk
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "changeType": "OUT",
+      "quantity": 99999,
+      "note": "Xuất quá số lượng"
+    },
+    {
+      "productId": 99999,
+      "changeType": "IN",
+      "quantity": 10,
+      "note": "Sản phẩm không tồn tại"
+    }
+  ]
+}
+
+### ============================================
+### ⚙️ 7. CẬP NHẬT NGƯỠNG TỒN KHO (Min/Max)
+### Yêu cầu: Permission "inventory.adjust"
+### ============================================
+
+### 7.1 Cập nhật ngưỡng tồn kho
+PUT {{baseUrl}}/api/inventory/1/thresholds
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "minQuantity": 10,
+  "maxQuantity": 500,
+  "reorderPoint": 20
+}
+
+### 7.2 Cập nhật chỉ minQuantity
+PUT {{baseUrl}}/api/inventory/1/thresholds
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "minQuantity": 15
+}
+
+### 7.3 ❌ Cập nhật ngưỡng cho inventory không tồn tại (Expected: 404)
+PUT {{baseUrl}}/api/inventory/99999/thresholds
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "minQuantity": 10,
+  "maxQuantity": 100
+}
+
+### 7.4 ❌ Staff không có quyền (Expected: 403)
+PUT {{baseUrl}}/api/inventory/1/thresholds
+Content-Type: application/json
+Authorization: Bearer {{staffToken}}
+
+{
+  "minQuantity": 10
+}
+
+### ============================================
+### 📋 8. LỊCH SỬ THAY ĐỔI TỒN KHO
+### Yêu cầu: Permission "inventory.view"
+### ============================================
+
+### 8.1 Lấy tất cả logs
+GET {{baseUrl}}/api/inventory/logs?page=1&pageSize=50
+Authorization: Bearer {{adminToken}}
+
+### 8.2 Lọc logs theo sản phẩm
+GET {{baseUrl}}/api/inventory/logs?productId=1&page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 8.3 Lọc logs theo loại thay đổi (IN)
+GET {{baseUrl}}/api/inventory/logs?changeType=IN&page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 8.4 Lọc logs theo loại thay đổi (OUT)
+GET {{baseUrl}}/api/inventory/logs?changeType=OUT&page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 8.5 Lọc logs theo khoảng thờii gian
+GET {{baseUrl}}/api/inventory/logs?fromDate=2024-01-01&toDate=2024-12-31&page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 8.6 Manager xem logs
+GET {{baseUrl}}/api/inventory/logs?page=1&pageSize=20
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### ⚠️ 9. SẢN PHẨM SẮP HẾT HÀNG / HẾT HÀNG
+### Yêu cầu: Permission "inventory.view"
+### ============================================
+
+### 9.1 Lấy danh sách sản phẩm sắp hết hàng (low stock)
+# Response: { Success: true, Count, Threshold, Data: LowStockItem[] }
+GET {{baseUrl}}/api/inventory/low-stock
+Authorization: Bearer {{adminToken}}
+
+### 9.2 Lấy low stock với ngưỡng tùy chỉnh
+GET {{baseUrl}}/api/inventory/low-stock?threshold=30
+Authorization: Bearer {{adminToken}}
+
+### 9.3 Lấy danh sách sản phẩm hết hàng (out of stock)
+# Response: { Success: true, Count, Data: OutOfStockItem[] }
+GET {{baseUrl}}/api/inventory/out-of-stock
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📈 10. THỐNG KÊ TỒN KHO
+### Yêu cầu: Permission "inventory.view"
+### ============================================
+
+### 10.1 Lấy thống kê tổng quan
+# Response: { Success: true, Data: { TotalProducts, TotalInventoryValue, LowStockCount, OutOfStockCount } }
+GET {{baseUrl}}/api/inventory/summary
+Authorization: Bearer {{adminToken}}
+
+### 10.2 Manager xem thống kê
+GET {{baseUrl}}/api/inventory/summary
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### ✅ 11. KIỂM TRA TỒN KHO
+### Yêu cầu: Permission "inventory.view"
+### ============================================
+
+### 11.1 Kiểm tra sản phẩm có đủ tồn kho
+GET {{baseUrl}}/api/inventory/check-stock?productId=1&quantity=10
+Authorization: Bearer {{adminToken}}
+
+### 11.2 Kiểm tra sản phẩm không đủ tồn kho
+GET {{baseUrl}}/api/inventory/check-stock?productId=1&quantity=99999
+Authorization: Bearer {{adminToken}}
+
+### 11.3 ❌ Kiểm tra sản phẩm không tồn tại
+GET {{baseUrl}}/api/inventory/check-stock?productId=99999&quantity=10
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ❌ 12. TEST KHÔNG TOKEN / TOKEN KHÔNG HỢP LỆ
+### ============================================
+
+### 12.1 Xem tồn kho không token (Expected: 401)
+GET {{baseUrl}}/api/inventory
+
+### 12.2 Điều chỉnh tồn kho không token (Expected: 401)
+POST {{baseUrl}}/api/inventory/adjust
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "changeType": "IN",
+  "quantity": 10
+}
+
+### 12.3 Xem logs không token (Expected: 401)
+GET {{baseUrl}}/api/inventory/logs
+
+### 12.4 Token không hợp lệ (Expected: 401)
+GET {{baseUrl}}/api/inventory
+Authorization: Bearer invalid_token_here
+
+### ============================================
+### ✅ CHECKLIST TEST HOÀN CHỈNH
+### ============================================
+### 
+### 📦 Lấy Danh Sách Tồn Kho:
+### [ ] 2.1 Lấy tất cả tồn kho → 200 OK + phân trang
+### [ ] 2.2-2.3 Lọc theo tên/danh mục
+### [ ] 2.4-2.5 Lọc low stock / out of stock
+### [ ] 2.6 Sắp xếp
+### [ ] 2.7 Manager xem được
+###
+### 🔍 Chi Tiết Tồn Kho:
+### [ ] 3.1 Lấy theo ID → 200 OK
+### [ ] 3.2 ❌ ID không tồn tại → 404
+### [ ] 3.3 Lấy theo Product ID → 200 OK
+### [ ] 3.4 ❌ Product ID không tồn tại → 404
+###
+### 📝 Điều Chỉnh Tồn Kho:
+### [ ] 4.1 Nhập kho (IN) thành công
+### [ ] 4.2 Xuất kho (OUT) thành công
+### [ ] 4.3 Điều chỉnh (ADJUST) thành công
+### [ ] 4.4 ❌ Xuất quá số lượng → 400
+### [ ] 4.5 ❌ Sản phẩm không tồn tại → 400
+### [ ] 4.6 ❌ ChangeType không hợp lệ → 400
+### [ ] 4.7 ❌ Số lượng <= 0 → 400
+### [ ] 4.8 ❌ Staff không có quyền → 403
+###
+### 📦 Helper Endpoints:
+### [ ] 5.1 Stock In thành công
+### [ ] 5.2 Stock Out thành công
+### [ ] 5.3 ❌ Stock Out quá số lượng → 400
+###
+### 📊 Điều Chỉnh Hàng Loạt:
+### [ ] 6.1 Adjust bulk thành công
+### [ ] 6.2 ❌ Dữ liệu không hợp lệ → xử lý partial
+###
+### ⚙️ Ngưỡng Tồn Kho:
+### [ ] 7.1-7.2 Cập nhật ngưỡng thành công
+### [ ] 7.3 ❌ Inventory không tồn tại → 404
+### [ ] 7.4 ❌ Staff không có quyền → 403
+###
+### 📋 Logs:
+### [ ] 8.1-8.5 Lọc logs theo các điều kiện
+### [ ] 8.6 Manager xem logs được
+###
+### ⚠️ Low Stock / Out of Stock:
+### [ ] 9.1-9.2 Lấy low stock
+### [ ] 9.3 Lấy out of stock
+###
+### 📈 Thống Kê:
+### [ ] 10.1-10.2 Xem summary
+###
+### ✅ Check Stock:
+### [ ] 11.1-11.2 Kiểm tra tồn kho
+### [ ] 11.3 ❌ Sản phẩm không tồn tại → 400
+###
+### 🔒 Security:
+### [ ] 12.1-12.4 Không token / Token invalid → 401
+###
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+###
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy lần lượt:
+###    - 1.1 Login Admin → Copy token vào @adminToken
+###    - 1.2 Login Manager → Copy token vào @managerToken
+###    - 1.3 Login Staff → Copy token vào @staffToken
+###    - Chạy các test khác theo thứ tự
+###
+### LƯU Ý:
+### - ChangeType: IN (nhập), OUT (xuất), ADJUST (điều chỉnh)
+### - OUT không được vượt quá số lượng tồn kho hiện có
+### - ADJUST sẽ set số lượng về giá trị cụ thể
+### - Các API cần permissions: inventory.view, inventory.adjust
+###
+### ============================================

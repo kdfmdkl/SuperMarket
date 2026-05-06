@@ -1,0 +1,268 @@
+### ============================================
+### 🧪 TEST LOGOUT & PHÂN QUYỀN - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@cashierToken = 
+@managerToken = 
+@refreshToken = 
+
+### ============================================
+### 🔐 1. TEST LOGOUT
+### ============================================
+
+### 1.1 Login Admin để lấy Token
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Logout thành công
+# Sử dụng token từ response trên
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{adminToken}}
+
+### 1.3 Verify - Refresh Token sau Logout (Expected: 401)
+POST {{baseUrl}}/api/auth/refresh-token
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 1.4 Logout không có Token (Expected: 401)
+POST {{baseUrl}}/api/auth/logout
+
+### 1.5 Logout với Token sai (Expected: 401)
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer invalid_token_here
+
+### ============================================
+### 👤 2. TEST PHÂN QUYỀN - ADMIN
+### ============================================
+
+### 2.1 Login Admin
+# @name loginAdmin2
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 2.2 Admin - Get Users (Expected: 200 OK)
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Get Products (Expected: 200 OK)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 💰 3. TEST PHÂN QUYỀN - CASHIER
+### ============================================
+
+### 3.1 Register Cashier mới
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test Cashier",
+  "username": "testcashier",
+  "password": "Test@123",
+  "confirmPassword": "Test@123",
+  "role": "Cashier"
+}
+
+### 3.2 Login Cashier
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testcashier",
+  "password": "Test@123"
+}
+
+### 3.3 Cashier - Get Users (Expected: 403 Forbidden)
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{cashierToken}}
+
+### 3.4 Cashier - Get Products (Expected: 200 OK)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{cashierToken}}
+
+### 3.5 Cashier - Delete Product (Expected: 403 Forbidden)
+DELETE {{baseUrl}}/api/products/1
+Authorization: Bearer {{cashierToken}}
+
+### ============================================
+### 🧑‍💼 4. TEST PHÂN QUYỀN - MANAGER
+### ============================================
+
+### 4.1 Register Manager
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test Manager",
+  "username": "testmanager",
+  "password": "Test@123",
+  "confirmPassword": "Test@123",
+  "role": "Manager"
+}
+
+### 4.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testmanager",
+  "password": "Test@123"
+}
+
+### 4.3 Manager - Get Products (Expected: 200 OK)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{managerToken}}
+
+### 4.4 Manager - Get Users (Expected: 403 Forbidden)
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### ❌ 5. TEST KHÔNG TOKEN
+### ============================================
+
+### 5.1 Get Users không token (Expected: 401)
+GET {{baseUrl}}/api/users
+
+### 5.2 Get Products không token (Expected: 401)
+GET {{baseUrl}}/api/products
+
+### ============================================
+### 🔍 6. TEST KIỂM TRA THÔNG TIN USER
+### ============================================
+
+### 6.1 Get Current User Info (Admin)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Get Current User Info (Cashier)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{cashierToken}}
+
+### ============================================
+### 🛍️ 7. TEST PRODUCTS API - PHÂN QUYỀN
+### ============================================
+
+### 7.1 Admin - Get All Products (Expected: 200 OK)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{adminToken}}
+
+### 7.2 Admin - Create Product (Expected: 200 OK)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Test Product Admin",
+  "description": "Product created by admin",
+  "price": 15000,
+  "costPrice": 10000,
+  "stockQuantity": 50,
+  "unit": "pcs",
+  "barcode": "ADMIN001"
+}
+
+### 7.3 Cashier - Get All Products (Expected: 200 OK)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{cashierToken}}
+
+### 7.4 Cashier - Create Product (Expected: 403 Forbidden)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "name": "Test Product Cashier",
+  "description": "Product created by cashier",
+  "price": 10000,
+  "costPrice": 5000,
+  "stockQuantity": 20,
+  "unit": "pcs",
+  "barcode": "CASHIER001"
+}
+
+### 7.5 Cashier - Delete Product (Expected: 403 Forbidden)
+DELETE {{baseUrl}}/api/products/1
+Authorization: Bearer {{cashierToken}}
+
+### 7.6 Manager - Get Products (Expected: 200 OK)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{managerToken}}
+
+### 7.7 Manager - Create Product (Expected: 200 OK)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "name": "Test Product Manager",
+  "description": "Product created by manager",
+  "price": 20000,
+  "costPrice": 12000,
+  "stockQuantity": 30,
+  "unit": "pcs",
+  "barcode": "MANAGER001"
+}
+
+### 7.8 Search Products (Admin)
+GET {{baseUrl}}/api/products/search?keyword=Test
+Authorization: Bearer {{adminToken}}
+
+### 7.9 Get Low Stock Products (Admin)
+GET {{baseUrl}}/api/products/low-stock?threshold=20
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Mở file này trong VS Code
+### 3. Click "Send Request" bên trên mỗi request
+### 4. Copy token từ response và paste vào biến @token
+###
+### LƯU Ý: 
+### - Chạy từng request theo thứ tự
+### - Copy token từ response và cập nhật biến @token
+### - Kiểm tra kết quả expected ở mỗi request
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+### 
+### LOGOUT:
+### [ ] Login thành công
+### [ ] Logout thành công với token hợp lệ
+### [ ] Refresh token bị thu hồi sau logout
+### [ ] Logout không có token → 401
+### [ ] Logout với token sai → 401
+###
+### PHÂN QUYỀN:
+### [ ] Admin → Get Users → 200 OK
+### [ ] Admin → Get Products → 200 OK
+### [ ] Cashier → Get Users → 403 Forbidden
+### [ ] Cashier → Get Products → 200 OK
+### [ ] Cashier → Create Product → 403 Forbidden
+### [ ] Manager → Get Products → 200 OK
+### [ ] Manager → Create Product → 200 OK
+### [ ] No Token → Any API → 401 Unauthorized
+###

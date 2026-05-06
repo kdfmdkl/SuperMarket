@@ -1,0 +1,206 @@
+### ============================================
+### 🧪 TEST REPORTS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### ============================================
+### 📊 2. DAILY SALES REPORT
+### ============================================
+
+### 2.1 Admin - Daily Sales Default (Last 7 days) (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/daily
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Admin - Daily Sales with Date Range (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/daily?fromDate=2024-01-01&toDate=2024-01-31
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Daily Sales Invalid Range (Expected: 400 Bad Request)
+GET {{baseUrl}}/api/reports/sales/daily?fromDate=2024-12-31&toDate=2024-01-01
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Manager - Daily Sales (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/daily
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 📈 3. MONTHLY SALES REPORT
+### ============================================
+
+### 3.1 Admin - Monthly Sales Default (Current Year) (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/monthly
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Admin - Monthly Sales Specific Year (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/monthly?year=2024
+Authorization: Bearer {{adminToken}}
+
+### 3.3 Manager - Monthly Sales (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/monthly
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 🏆 4. TOP SELLING PRODUCTS
+### ============================================
+
+### 4.1 Admin - Top Selling Default (Last 30 days, Top 10) (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/products/top-selling
+Authorization: Bearer {{adminToken}}
+
+### 4.2 Admin - Top Selling with Date Range (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/products/top-selling?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 4.3 Admin - Top Selling Custom Top (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/products/top-selling?top=5
+Authorization: Bearer {{adminToken}}
+
+### 4.4 Admin - Top Selling Top 20 (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/products/top-selling?top=20
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📂 5. SALES BY CATEGORY
+### ============================================
+
+### 5.1 Admin - Sales by Category Default (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/by-category
+Authorization: Bearer {{adminToken}}
+
+### 5.2 Admin - Sales by Category with Date Range (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/by-category?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 5.3 Manager - Sales by Category (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/sales/by-category
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 📦 6. INVENTORY REPORT
+### ============================================
+
+### 6.1 Admin - Inventory Summary (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/inventory/summary
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Manager - Inventory Summary (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/inventory/summary
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 👥 7. TOP CUSTOMERS REPORT
+### ============================================
+
+### 7.1 Admin - Top Customers Default (Last 90 days, Top 10) (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/customers/top
+Authorization: Bearer {{adminToken}}
+
+### 7.2 Admin - Top Customers with Date Range (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/customers/top?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 7.3 Admin - Top Customers Custom Count (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/customers/top?top=5
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🎯 8. DASHBOARD REPORT
+### ============================================
+
+### 8.1 Admin - Dashboard Overview (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/dashboard
+Authorization: Bearer {{adminToken}}
+
+### 8.2 Manager - Dashboard Overview (Expected: 200 OK)
+GET {{baseUrl}}/api/reports/dashboard
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### ❌ 9. UNAUTHORIZED ACCESS
+### ============================================
+
+### 9.1 No Token - Dashboard (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/reports/dashboard
+
+### 9.2 No Token - Daily Sales (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/reports/sales/daily
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến tương ứng
+### 4. Chạy các request test theo thứ tự
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+###
+### DAILY SALES:
+### [ ] Get daily sales default → 200 OK
+### [ ] Get with date range → 200 OK
+### [ ] Get invalid range → 400 Bad Request
+### [ ] Manager access → 200 OK
+###
+### MONTHLY SALES:
+### [ ] Get monthly sales default → 200 OK
+### [ ] Get specific year → 200 OK
+### [ ] Manager access → 200 OK
+###
+### TOP SELLING:
+### [ ] Get top selling default → 200 OK
+### [ ] Get with date range → 200 OK
+### [ ] Get top 5 → 200 OK
+### [ ] Get top 20 → 200 OK
+###
+### SALES BY CATEGORY:
+### [ ] Get by category default → 200 OK
+### [ ] Get with date range → 200 OK
+### [ ] Manager access → 200 OK
+###
+### INVENTORY:
+### [ ] Get inventory summary → 200 OK
+### [ ] Manager access → 200 OK
+###
+### TOP CUSTOMERS:
+### [ ] Get top customers default → 200 OK
+### [ ] Get with date range → 200 OK
+### [ ] Get top 5 → 200 OK
+###
+### DASHBOARD:
+### [ ] Get dashboard admin → 200 OK
+### [ ] Get dashboard manager → 200 OK
+###
+### UNAUTHORIZED:
+### [ ] No token dashboard → 401 Unauthorized
+### [ ] No token daily sales → 401 Unauthorized
+###

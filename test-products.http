@@ -1,0 +1,382 @@
+### ============================================
+### 🛍️ TEST API PRODUCTS - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@warehouseToken = 
+@cashierToken = 
+
+### ============================================
+### 🔐 1. LOGIN - Lấy Token
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager (đã tạo từ trước)
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testmanager",
+  "password": "Test@123"
+}
+
+### 1.3 Login Warehouse (đã tạo từ trước)
+# @name loginWarehouse
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testwarehouse",
+  "password": "Test@123"
+}
+
+### 1.4 Login Cashier (đã tạo từ trước)
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testcashier",
+  "password": "Test@123"
+}
+
+### ============================================
+### 📝 2. CREATE USERS (Chỉ chạy 1 lần đầu)
+### ============================================
+
+### 2.1 Register Manager
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test Manager",
+  "username": "testmanager",
+  "password": "Test@123",
+  "confirmPassword": "Test@123",
+  "role": "Manager"
+}
+
+### 2.2 Register Warehouse
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test Warehouse",
+  "username": "testwarehouse",
+  "password": "Test@123",
+  "confirmPassword": "Test@123",
+  "role": "Warehouse"
+}
+
+### 2.3 Register Cashier
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test Cashier",
+  "username": "testcashier",
+  "password": "Test@123",
+  "confirmPassword": "Test@123",
+  "role": "Cashier"
+}
+
+### ============================================
+### 📦 3. CRUD PRODUCTS - ADMIN
+### ============================================
+
+### 3.1 Get All Products (Admin)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Get Product By ID (Admin)
+GET {{baseUrl}}/api/products/1
+Authorization: Bearer {{adminToken}}
+
+### 3.3 Create Product (Admin) - SUCCESS
+# @name createProductAdmin
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Admin Product Test",
+  "description": "Product created by admin",
+  "sellPrice": 25000,
+  "costPrice": 18000,
+  "unit": "hộp",
+  "barcode": "ADMIN_TEST_001",
+  "minQuantity": 10,
+  "maxQuantity": 200
+}
+
+### 3.4 Update Product (Admin)
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Updated Product Name",
+  "sellPrice": 30000,
+  "isActive": true
+}
+
+### 3.5 Delete Product (Admin)
+DELETE {{baseUrl}}/api/products/2
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📦 4. CRUD PRODUCTS - MANAGER
+### ============================================
+
+### 4.1 Get All Products (Manager)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{managerToken}}
+
+### 4.2 Create Product (Manager)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "name": "Manager Product Test",
+  "description": "Product created by manager",
+  "sellPrice": 35000,
+  "costPrice": 25000,
+  "unit": "thùng",
+  "barcode": "MANAGER_TEST_001",
+  "minQuantity": 5,
+  "maxQuantity": 100
+}
+
+### 4.3 Delete Product (Manager)
+DELETE {{baseUrl}}/api/products/3
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 📦 5. CRUD PRODUCTS - WAREHOUSE
+### ============================================
+
+### 5.1 Get All Products (Warehouse)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{warehouseToken}}
+
+### 5.2 Create Product (Warehouse) - SUCCESS
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{warehouseToken}}
+
+{
+  "name": "Warehouse Product Test",
+  "description": "Product created by warehouse",
+  "sellPrice": 15000,
+  "costPrice": 10000,
+  "unit": "chai",
+  "barcode": "WAREHOUSE_TEST_001",
+  "minQuantity": 20,
+  "maxQuantity": 500
+}
+
+### 5.3 Delete Product (Warehouse) - FORBIDDEN (403)
+DELETE {{baseUrl}}/api/products/1
+Authorization: Bearer {{warehouseToken}}
+
+### ============================================
+### 📦 6. PRODUCTS - CASHIER (Chỉ được XEM)
+### ============================================
+
+### 6.1 Get All Products (Cashier) - SUCCESS
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{cashierToken}}
+
+### 6.2 Get Product By ID (Cashier) - SUCCESS
+GET {{baseUrl}}/api/products/1
+Authorization: Bearer {{cashierToken}}
+
+### 6.3 Create Product (Cashier) - FORBIDDEN (403)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "name": "Cashier Product Test",
+  "sellPrice": 10000,
+  "costPrice": 5000,
+  "unit": "cái"
+}
+
+### 6.4 Update Product (Cashier) - FORBIDDEN (403)
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "name": "Updated by Cashier",
+  "sellPrice": 20000
+}
+
+### 6.5 Delete Product (Cashier) - FORBIDDEN (403)
+DELETE {{baseUrl}}/api/products/1
+Authorization: Bearer {{cashierToken}}
+
+### ============================================
+### ❌ 7. VALIDATION TESTS
+### ============================================
+
+### 7.1 Missing Required Fields - 400 Bad Request
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "description": "Missing name and prices"
+}
+
+### 7.2 SellPrice < CostPrice - 400 Bad Request
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Invalid Price Product",
+  "sellPrice": 5000,
+  "costPrice": 10000,
+  "unit": "pcs"
+}
+
+### 7.3 Duplicate Barcode - 400 Bad Request
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Duplicate Barcode Product",
+  "sellPrice": 20000,
+  "costPrice": 15000,
+  "unit": "pcs",
+  "barcode": "ADMIN_TEST_001"
+}
+
+### 7.4 Invalid CategoryId - 400 Bad Request
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Invalid Category Product",
+  "sellPrice": 20000,
+  "costPrice": 15000,
+  "unit": "pcs",
+  "categoryId": 99999
+}
+
+### 7.5 Product Not Found - 404 Not Found
+GET {{baseUrl}}/api/products/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🔍 8. SEARCH & FILTER
+### ============================================
+
+### 8.1 Search Products by Keyword
+GET {{baseUrl}}/api/products/search?keyword=Coca
+Authorization: Bearer {{adminToken}}
+
+### 8.2 Search Products by Barcode
+GET {{baseUrl}}/api/products/search?keyword=ADMIN
+Authorization: Bearer {{adminToken}}
+
+### 8.3 Get Low Stock Products (threshold = 20)
+GET {{baseUrl}}/api/products/low-stock?threshold=20
+Authorization: Bearer {{adminToken}}
+
+### 8.4 Get Low Stock Products (threshold = 50)
+GET {{baseUrl}}/api/products/low-stock?threshold=50
+Authorization: Bearer {{managerToken}}
+
+### ============================================
+### 🚫 9. NO TOKEN TESTS
+### ============================================
+
+### 9.1 Get Products without Token - 401 Unauthorized
+GET {{baseUrl}}/api/products
+
+### 9.2 Create Product without Token - 401 Unauthorized
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "No Token Product",
+  "sellPrice": 10000,
+  "costPrice": 5000,
+  "unit": "pcs"
+}
+
+### 9.3 Delete Product without Token - 401 Unauthorized
+DELETE {{baseUrl}}/api/products/1
+
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+### 
+### CRUD Tests:
+### [ ] Get All Products → 200 OK
+### [ ] Get Product by ID → 200 OK
+### [ ] Get Product by ID (not exist) → 404 Not Found
+### [ ] Create Product (Admin) → 200 OK
+### [ ] Update Product (Admin) → 200 OK
+### [ ] Delete Product (Admin) → 200 OK
+###
+### Phân Quyền Tests:
+### [ ] Admin Create → 200 OK
+### [ ] Manager Create → 200 OK
+### [ ] Warehouse Create → 200 OK
+### [ ] Cashier Create → 403 Forbidden
+### [ ] Admin Delete → 200 OK
+### [ ] Manager Delete → 200 OK
+### [ ] Warehouse Delete → 403 Forbidden
+### [ ] Cashier Delete → 403 Forbidden
+###
+### Validation Tests:
+### [ ] Missing fields → 400 Bad Request
+### [ ] SellPrice < CostPrice → 400 Bad Request
+### [ ] Duplicate Barcode → 400 Bad Request
+### [ ] Invalid CategoryId → 400 Bad Request
+###
+### Search & Filter Tests:
+### [ ] Search by keyword → 200 OK
+### [ ] Get Low Stock → 200 OK
+###
+### No Token Tests:
+### [ ] Get without token → 401 Unauthorized
+### [ ] Create without token → 401 Unauthorized
+### [ ] Delete without token → 401 Unauthorized
+###
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+###
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Mở file này trong VS Code
+### 3. Chạy theo thứ tự:
+###    - Đầu tiên: Chạy các request trong phần 1 (Login) để lấy token
+###    - Copy token từ response và paste vào các biến @xxxToken ở đầu file
+###    - Sau đó chạy các test khác theo nhu cầu
+###
+### LƯU Ý:
+### - Nếu chưa có user Manager/Warehouse/Cashier, chạy phần 2 trước
+### - Mỗi request có comment Expected để biết kết quả mong đợi
+### - Checklist ở cuối file để đánh dấu các test đã chạy
+###
+### ============================================

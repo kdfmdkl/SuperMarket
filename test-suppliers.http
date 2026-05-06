@@ -1,0 +1,241 @@
+### ============================================
+### 🧪 TEST SUPPLIERS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@warehouseToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### ============================================
+### 🏢 2. GET ALL SUPPLIERS
+### ============================================
+
+### 2.1 Admin - Get All Suppliers (Expected: 200 OK)
+GET {{baseUrl}}/api/suppliers
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Admin - Get Suppliers with Pagination
+GET {{baseUrl}}/api/suppliers?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Search Suppliers by Keyword
+GET {{baseUrl}}/api/suppliers?keyword=Cong
+Authorization: Bearer {{adminToken}}
+
+### 2.4 No Token - Get Suppliers (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/suppliers
+
+### ============================================
+### 🔍 3. GET SUPPLIER BY ID
+### ============================================
+
+### 3.1 Admin - Get Supplier by ID (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/suppliers/1
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Admin - Get Non-existent Supplier (Expected: 404 Not Found)
+GET {{baseUrl}}/api/suppliers/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ➕ 4. CREATE SUPPLIER
+### ============================================
+
+### 4.1 Admin - Create Supplier Success (Expected: 200 OK)
+POST {{baseUrl}}/api/suppliers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Công ty TNHH Test Supplier",
+  "phone": "02812345678",
+  "email": "supplier@test.com",
+  "address": "123 Đường Test, Quận 1, TP.HCM"
+}
+
+### 4.2 Admin - Create Supplier without Name (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/suppliers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "phone": "02812345679"
+}
+
+### 4.3 Admin - Create Supplier with Duplicate Name (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/suppliers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Công ty TNHH Test Supplier",
+  "phone": "02812345680"
+}
+
+### 4.4 Admin - Create Supplier with Duplicate Phone (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/suppliers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Another Supplier",
+  "phone": "02812345678"
+}
+
+### ============================================
+### ✏️ 5. UPDATE SUPPLIER
+### ============================================
+
+### 5.1 Admin - Update Supplier (Expected: 200 OK)
+PUT {{baseUrl}}/api/suppliers/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Updated Supplier Name",
+  "phone": "02898765432",
+  "email": "updated@supplier.com",
+  "address": "456 Đường Mới, Quận 2, TP.HCM",
+  "isActive": true
+}
+
+### 5.2 Admin - Update Non-existent Supplier (Expected: 404 Not Found)
+PUT {{baseUrl}}/api/suppliers/99999
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Non Existent Supplier"
+}
+
+### 5.3 Admin - Deactivate Supplier
+PUT {{baseUrl}}/api/suppliers/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "isActive": false
+}
+
+### ============================================
+### 🗑️ 6. DELETE SUPPLIER
+### ============================================
+
+### 6.1 Admin - Delete Supplier (Expected: 200 OK - nếu không có đơn đặt hàng)
+DELETE {{baseUrl}}/api/suppliers/2
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Admin - Delete Supplier with Purchase Orders (Expected: 400 Bad Request)
+DELETE {{baseUrl}}/api/suppliers/1
+Authorization: Bearer {{adminToken}}
+
+### 6.3 Admin - Delete Non-existent Supplier (Expected: 404 Not Found)
+DELETE {{baseUrl}}/api/suppliers/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📦 7. GET SUPPLIER PRODUCTS
+### ============================================
+
+### 7.1 Admin - Get Supplier Products (Expected: 200 OK)
+GET {{baseUrl}}/api/suppliers/1/products
+Authorization: Bearer {{adminToken}}
+
+### 7.2 Admin - Get Supplier Products with Pagination
+GET {{baseUrl}}/api/suppliers/1/products?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 7.3 Admin - Get Products for Non-existent Supplier (Expected: 404)
+GET {{baseUrl}}/api/suppliers/99999/products
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🔎 8. QUICK SEARCH SUPPLIERS
+### ============================================
+
+### 8.1 Quick Search by Name (Expected: 200 OK)
+GET {{baseUrl}}/api/suppliers/search/quick?keyword=Cong
+Authorization: Bearer {{adminToken}}
+
+### 8.2 Quick Search by Phone (Expected: 200 OK)
+GET {{baseUrl}}/api/suppliers/search/quick?keyword=028
+Authorization: Bearer {{adminToken}}
+
+### 8.3 Quick Search - Short Keyword (Expected: 400 Bad Request)
+GET {{baseUrl}}/api/suppliers/search/quick?keyword=a
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến @adminToken, @managerToken
+### 4. Chạy các request test theo thứ tự
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+### 
+### GET ALL:
+### [ ] Admin get all suppliers → 200 OK
+### [ ] Admin get with pagination → 200 OK
+### [ ] Admin search suppliers → 200 OK
+### [ ] No token → 401 Unauthorized
+###
+### GET BY ID:
+### [ ] Get existing supplier → 200 OK
+### [ ] Get non-existent supplier → 404 Not Found
+###
+### CREATE:
+### [ ] Create valid supplier → 200 OK
+### [ ] Create without name → 400 Bad Request
+### [ ] Create duplicate name → 400 Bad Request
+### [ ] Create duplicate phone → 400 Bad Request
+###
+### UPDATE:
+### [ ] Update existing supplier → 200 OK
+### [ ] Update non-existent → 404 Not Found
+### [ ] Deactivate supplier → 200 OK
+###
+### DELETE:
+### [ ] Delete supplier without POs → 200 OK
+### [ ] Delete supplier with POs → 400 Bad Request
+### [ ] Delete non-existent → 404 Not Found
+###
+### SUPPLIER PRODUCTS:
+### [ ] Get supplier products → 200 OK
+### [ ] Get products with pagination → 200 OK
+### [ ] Get products non-existent supplier → 404
+###
+### QUICK SEARCH:
+### [ ] Search by name → 200 OK
+### [ ] Search by phone → 200 OK
+### [ ] Search short keyword → 400 Bad Request
+###

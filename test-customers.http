@@ -1,0 +1,264 @@
+### ============================================
+### 🧪 TEST CUSTOMERS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@cashierToken = 
+@managerToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Cashier
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cashier",
+  "password": "Cashier@123"
+}
+
+### 1.3 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### ============================================
+### 👥 2. GET ALL CUSTOMERS
+### ============================================
+
+### 2.1 Admin - Get All Customers (Expected: 200 OK)
+GET {{baseUrl}}/api/customers
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Admin - Get Customers with Pagination
+GET {{baseUrl}}/api/customers?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Search Customers by Keyword
+GET {{baseUrl}}/api/customers?keyword=Nguyen
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Cashier - Get Customers (Expected: 403 Forbidden - cần customers.view permission)
+GET {{baseUrl}}/api/customers
+Authorization: Bearer {{cashierToken}}
+
+### 2.5 No Token - Get Customers (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/customers
+
+### ============================================
+### 🔍 3. GET CUSTOMER BY ID
+### ============================================
+
+### 3.1 Admin - Get Customer by ID (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/customers/1
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Admin - Get Non-existent Customer (Expected: 404 Not Found)
+GET {{baseUrl}}/api/customers/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ➕ 4. CREATE CUSTOMER
+### ============================================
+
+### 4.1 Admin - Create Customer Success (Expected: 200 OK)
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fullName": "Nguyen Van Test",
+  "phone": "0909123456",
+  "email": "test.customer@example.com"
+}
+
+### 4.2 Admin - Create Customer without Name (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "phone": "0909123457"
+}
+
+### 4.3 Admin - Create Customer with Invalid Email (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fullName": "Test Customer",
+  "email": "invalid-email"
+}
+
+### 4.4 Admin - Create Customer with Duplicate Phone (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fullName": "Duplicate Phone Test",
+  "phone": "0909123456"
+}
+
+### 4.5 Cashier - Create Customer (Expected: 403 Forbidden)
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "fullName": "Cashier Customer Test",
+  "phone": "0909123458"
+}
+
+### ============================================
+### ✏️ 5. UPDATE CUSTOMER
+### ============================================
+
+### 5.1 Admin - Update Customer (Expected: 200 OK)
+PUT {{baseUrl}}/api/customers/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fullName": "Updated Customer Name",
+  "phone": "0909876543",
+  "email": "updated@example.com"
+}
+
+### 5.2 Admin - Update Non-existent Customer (Expected: 404 Not Found)
+PUT {{baseUrl}}/api/customers/99999
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "fullName": "Non Existent"
+}
+
+### 5.3 Admin - Update with Duplicate Phone (Expected: 400 Bad Request)
+PUT {{baseUrl}}/api/customers/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "phone": "0909123456"
+}
+
+### ============================================
+### 🗑️ 6. DELETE CUSTOMER
+### ============================================
+
+### 6.1 Admin - Delete Customer (Expected: 200 OK - nếu không có hóa đơn)
+DELETE {{baseUrl}}/api/customers/2
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Admin - Delete Customer with Invoices (Expected: 400 Bad Request)
+DELETE {{baseUrl}}/api/customers/1
+Authorization: Bearer {{adminToken}}
+
+### 6.3 Admin - Delete Non-existent Customer (Expected: 404 Not Found)
+DELETE {{baseUrl}}/api/customers/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📜 7. GET CUSTOMER INVOICES
+### ============================================
+
+### 7.1 Admin - Get Customer Invoices (Expected: 200 OK)
+GET {{baseUrl}}/api/customers/1/invoices
+Authorization: Bearer {{adminToken}}
+
+### 7.2 Admin - Get Customer Invoices with Pagination
+GET {{baseUrl}}/api/customers/1/invoices?page=1&pageSize=5
+Authorization: Bearer {{adminToken}}
+
+### 7.3 Admin - Get Invoices for Non-existent Customer (Expected: 404)
+GET {{baseUrl}}/api/customers/99999/invoices
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🔎 8. QUICK SEARCH CUSTOMERS
+### ============================================
+
+### 8.1 Quick Search by Name (Expected: 200 OK)
+GET {{baseUrl}}/api/customers/search/quick?keyword=Nguyen
+Authorization: Bearer {{adminToken}}
+
+### 8.2 Quick Search by Phone (Expected: 200 OK)
+GET {{baseUrl}}/api/customers/search/quick?keyword=0909
+Authorization: Bearer {{adminToken}}
+
+### 8.3 Quick Search - Short Keyword (Expected: 400 Bad Request)
+GET {{baseUrl}}/api/customers/search/quick?keyword=a
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến @adminToken, @cashierToken, @managerToken
+### 4. Chạy các request test theo thứ tự
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+### 
+### GET ALL:
+### [ ] Admin get all customers → 200 OK
+### [ ] Admin get with pagination → 200 OK
+### [ ] Admin search customers → 200 OK
+### [ ] Cashier get customers → 403 Forbidden
+### [ ] No token → 401 Unauthorized
+###
+### GET BY ID:
+### [ ] Get existing customer → 200 OK
+### [ ] Get non-existent customer → 404 Not Found
+###
+### CREATE:
+### [ ] Create valid customer → 200 OK
+### [ ] Create without name → 400 Bad Request
+### [ ] Create with invalid email → 400 Bad Request
+### [ ] Create duplicate phone → 400 Bad Request
+### [ ] Cashier create customer → 403 Forbidden
+###
+### UPDATE:
+### [ ] Update existing customer → 200 OK
+### [ ] Update non-existent → 404 Not Found
+### [ ] Update duplicate phone → 400 Bad Request
+###
+### DELETE:
+### [ ] Delete customer without invoices → 200 OK
+### [ ] Delete customer with invoices → 400 Bad Request
+### [ ] Delete non-existent → 404 Not Found
+###
+### CUSTOMER INVOICES:
+### [ ] Get customer invoices → 200 OK
+### [ ] Get invoices with pagination → 200 OK
+### [ ] Get invoices non-existent customer → 404
+###
+### QUICK SEARCH:
+### [ ] Search by name → 200 OK
+### [ ] Search by phone → 200 OK
+### [ ] Search short keyword → 400 Bad Request
+###

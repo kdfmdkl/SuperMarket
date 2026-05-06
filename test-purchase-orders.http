@@ -1,0 +1,387 @@
+### ============================================
+### 🧪 TEST PURCHASE ORDERS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@warehouseToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### ============================================
+### 📋 2. GET ALL PURCHASE ORDERS
+### ============================================
+
+### 2.1 Admin - Get All POs (Expected: 200 OK)
+GET {{baseUrl}}/api/purchaseorders
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Admin - Get POs with Pagination
+GET {{baseUrl}}/api/purchaseorders?page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### 2.3 Admin - Filter by Status
+GET {{baseUrl}}/api/purchaseorders?status=DRAFT
+Authorization: Bearer {{adminToken}}
+
+### 2.4 Admin - Filter by Supplier
+GET {{baseUrl}}/api/purchaseorders?supplierId=1
+Authorization: Bearer {{adminToken}}
+
+### 2.5 Admin - Filter by Date Range
+GET {{baseUrl}}/api/purchaseorders?fromDate=2024-01-01&toDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### 2.6 No Token - Get POs (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/purchaseorders
+
+### ============================================
+### 🔍 3. GET PURCHASE ORDER BY ID
+### ============================================
+
+### 3.1 Admin - Get PO by ID (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/purchaseorders/1
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Admin - Get Non-existent PO (Expected: 404 Not Found)
+GET {{baseUrl}}/api/purchaseorders/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ➕ 4. CREATE PURCHASE ORDER
+### ============================================
+
+### 4.1 Admin - Create PO Success (Expected: 200 OK)
+POST {{baseUrl}}/api/purchaseorders
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "supplierId": 1,
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 10,
+      "unitCost": 100000
+    },
+    {
+      "productId": 2,
+      "quantity": 5,
+      "unitCost": 200000
+    }
+  ],
+  "note": "Đơn đặt hàng test"
+}
+
+### 4.2 Admin - Create PO without Supplier (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 10,
+      "unitCost": 100000
+    }
+  ]
+}
+
+### 4.3 Admin - Create PO with Invalid Supplier (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "supplierId": 99999,
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 10,
+      "unitCost": 100000
+    }
+  ]
+}
+
+### 4.4 Admin - Create PO with Invalid Product (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "supplierId": 1,
+  "items": [
+    {
+      "productId": 99999,
+      "quantity": 10,
+      "unitCost": 100000
+    }
+  ]
+}
+
+### 4.5 Admin - Create PO with Zero Quantity (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "supplierId": 1,
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 0,
+      "unitCost": 100000
+    }
+  ]
+}
+
+### 4.6 Admin - Create PO without Items (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "supplierId": 1,
+  "items": []
+}
+
+### ============================================
+### ✏️ 5. UPDATE PURCHASE ORDER
+### ============================================
+
+### 5.1 Admin - Update PO Note (Expected: 200 OK - chỉ khi DRAFT)
+PUT {{baseUrl}}/api/purchaseorders/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "note": "Ghi chú đã cập nhật"
+}
+
+### 5.2 Admin - Update Non-existent PO (Expected: 404 Not Found)
+PUT {{baseUrl}}/api/purchaseorders/99999
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "note": "Test"
+}
+
+### 5.3 Admin - Update PO not in DRAFT (Expected: 400 Bad Request)
+PUT {{baseUrl}}/api/purchaseorders/2
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "note": "Cannot update"
+}
+
+### ============================================
+### 📤 6. SEND PURCHASE ORDER
+### ============================================
+
+### 6.1 Admin - Send PO (Expected: 200 OK - chuyển từ DRAFT sang ORDERED)
+POST {{baseUrl}}/api/purchaseorders/1/send
+Authorization: Bearer {{adminToken}}
+
+### 6.2 Admin - Send Non-existent PO (Expected: 404 Not Found)
+POST {{baseUrl}}/api/purchaseorders/99999/send
+Authorization: Bearer {{adminToken}}
+
+### 6.3 Admin - Send PO not in DRAFT (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders/2/send
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📥 7. RECEIVE PURCHASE ORDER
+### ============================================
+
+### 7.1 Admin - Receive PO (Expected: 200 OK - chuyển từ ORDERED sang RECEIVED)
+POST {{baseUrl}}/api/purchaseorders/2/receive
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "note": "Nhận hàng đầy đủ"
+}
+
+### 7.2 Admin - Receive Non-existent PO (Expected: 404 Not Found)
+POST {{baseUrl}}/api/purchaseorders/99999/receive
+Authorization: Bearer {{adminToken}}
+
+### 7.3 Admin - Receive PO not in ORDERED (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders/1/receive
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ❌ 8. CANCEL PURCHASE ORDER
+### ============================================
+
+### 8.1 Admin - Cancel PO (Expected: 200 OK)
+POST {{baseUrl}}/api/purchaseorders/3/cancel
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "reason": "Hủy do không còn nhu cầu"
+}
+
+### 8.2 Admin - Cancel Non-existent PO (Expected: 404 Not Found)
+POST {{baseUrl}}/api/purchaseorders/99999/cancel
+Authorization: Bearer {{adminToken}}
+
+### 8.3 Admin - Cancel Already Cancelled PO (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders/3/cancel
+Authorization: Bearer {{adminToken}}
+
+### 8.4 Admin - Cancel Received PO (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders/2/cancel
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🗑️ 9. DELETE PURCHASE ORDER
+### ============================================
+
+### 9.1 Admin - Delete DRAFT PO (Expected: 200 OK)
+DELETE {{baseUrl}}/api/purchaseorders/4
+Authorization: Bearer {{adminToken}}
+
+### 9.2 Admin - Delete CANCELLED PO (Expected: 200 OK)
+DELETE {{baseUrl}}/api/purchaseorders/5
+Authorization: Bearer {{adminToken}}
+
+### 9.3 Admin - Delete Non-DRAFT PO (Expected: 400 Bad Request)
+DELETE {{baseUrl}}/api/purchaseorders/2
+Authorization: Bearer {{adminToken}}
+
+### 9.4 Admin - Delete Non-existent PO (Expected: 404 Not Found)
+DELETE {{baseUrl}}/api/purchaseorders/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📦 10. MANAGE PO ITEMS
+### ============================================
+
+### 10.1 Admin - Add Item to PO (Expected: 200 OK - chỉ khi DRAFT)
+POST {{baseUrl}}/api/purchaseorders/1/items
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 3,
+  "quantity": 15,
+  "unitCost": 150000
+}
+
+### 10.2 Admin - Add Item to Non-DRAFT PO (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/purchaseorders/2/items
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "productId": 3,
+  "quantity": 15,
+  "unitCost": 150000
+}
+
+### 10.3 Admin - Remove Item from PO (Expected: 200 OK - chỉ khi DRAFT)
+DELETE {{baseUrl}}/api/purchaseorders/1/items/1
+Authorization: Bearer {{adminToken}}
+
+### 10.4 Admin - Remove Item from Non-DRAFT PO (Expected: 400 Bad Request)
+DELETE {{baseUrl}}/api/purchaseorders/2/items/1
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến tương ứng
+### 4. Chạy các request test theo thứ tự
+###
+### WORKFLOW TEST:
+### 1. Create PO (DRAFT) → 2. Add Items → 3. Send PO (ORDERED)
+### 4. Receive PO (RECEIVED) → Kiểm tra kho được cập nhật
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+###
+### GET ALL:
+### [ ] Get all POs → 200 OK
+### [ ] Get with pagination → 200 OK
+### [ ] Filter by status → 200 OK
+### [ ] Filter by supplier → 200 OK
+### [ ] Filter by date → 200 OK
+###
+### GET BY ID:
+### [ ] Get existing PO → 200 OK
+### [ ] Get non-existent → 404 Not Found
+###
+### CREATE:
+### [ ] Create valid PO → 200 OK
+### [ ] Create without supplier → 400 Bad Request
+### [ ] Create invalid supplier → 400 Bad Request
+### [ ] Create invalid product → 400 Bad Request
+### [ ] Create zero quantity → 400 Bad Request
+### [ ] Create without items → 400 Bad Request
+###
+### UPDATE:
+### [ ] Update PO note → 200 OK
+### [ ] Update non-existent → 404 Not Found
+### [ ] Update non-DRAFT → 400 Bad Request
+###
+### SEND:
+### [ ] Send DRAFT PO → 200 OK
+### [ ] Send non-existent → 404 Not Found
+### [ ] Send non-DRAFT → 400 Bad Request
+###
+### RECEIVE:
+### [ ] Receive ORDERED PO → 200 OK
+### [ ] Receive non-existent → 404 Not Found
+### [ ] Receive non-ORDERED → 400 Bad Request
+###
+### CANCEL:
+### [ ] Cancel PO → 200 OK
+### [ ] Cancel non-existent → 404 Not Found
+### [ ] Cancel already cancelled → 400 Bad Request
+### [ ] Cancel received → 400 Bad Request
+###
+### DELETE:
+### [ ] Delete DRAFT → 200 OK
+### [ ] Delete CANCELLED → 200 OK
+### [ ] Delete non-DRAFT → 400 Bad Request
+### [ ] Delete non-existent → 404 Not Found
+###
+### ITEMS:
+### [ ] Add item to DRAFT → 200 OK
+### [ ] Add to non-DRAFT → 400 Bad Request
+### [ ] Remove item from DRAFT → 200 OK
+### [ ] Remove from non-DRAFT → 400 Bad Request
+###

@@ -1,0 +1,385 @@
+11### ============================================
+### 📁 TEST API CATEGORIES - SuperMarketMini
+### ============================================
+### File: test-categories-complete.http
+### Mô tả: Test đầy đủ cho Categories API
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@cashierToken = 
+
+### ============================================
+### 🔐 1. LOGIN - Lấy Token
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Manager
+# @name loginManager
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "manager",
+  "password": "Manager@123"
+}
+
+### 1.3 Login Cashier
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cashier",
+  "password": "Cashier@123"
+}
+
+### ============================================
+### 📁 2. LẤY DANH MỤC (Public - Không cần token)
+### ============================================
+
+### 2.1 Lấy tất cả danh mục (Tree structure)
+# Response: { Success: true, Count: number, Data: CategoryTreeDto[] }
+GET {{baseUrl}}/api/categories
+
+### 2.2 Lấy danh mục gốc (Root categories)
+# Response: { Success: true, Count: number, Data: CategoryDto[] }
+GET {{baseUrl}}/api/categories/roots
+
+### 2.3 Lấy chi tiết danh mục ID=1
+# Response: { Success: true, Data: CategoryDetailDto }
+GET {{baseUrl}}/api/categories/1
+
+### 2.4 ❌ Lấy chi tiết danh mục không tồn tại (Expected: 404)
+GET {{baseUrl}}/api/categories/99999
+
+### 2.5 Lấy sản phẩm theo danh mục (có phân trang)
+# Query params: page, pageSize
+# Response: { Success: true, CategoryName, TotalCount, Page, PageSize, TotalPages, Data: Product[] }
+GET {{baseUrl}}/api/categories/1/products?page=1&pageSize=10
+
+### 2.6 ❌ Lấy sản phẩm theo danh mục không tồn tại (Expected: 404)
+GET {{baseUrl}}/api/categories/99999/products
+
+### ============================================
+### ➕ 3. TẠO DANH MỤC MỚI
+### Yêu cầu: Permission "categories.create"
+### ============================================
+
+### 3.1 Tạo danh mục gốc - Admin
+# Response: { Success: true, Message, Data: CategoryDto }
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Đồ uống",
+  "sortOrder": 1,
+  "seoAlias": "do-uong",
+  "seoTitle": "Đồ uống - Siêu thị Mini",
+  "seoKeyword": "nước ngọt, nước suối, đồ uống",
+  "seoDescription": "Các loại đồ uống giải khát",
+  "isActive": true
+}
+
+### 3.2 Tạo danh mục con - Manager
+# Danh mục con của ID=1
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "name": "Nước ngọt có ga",
+  "parentId": 1,
+  "sortOrder": 1,
+  "isActive": true
+}
+
+### 3.3 Tạo danh mục con khác - Nước suối
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Nước suối",
+  "parentId": 1,
+  "sortOrder": 2,
+  "isActive": true
+}
+
+### 3.4 Tạo danh mục Thực phẩm
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Thực phẩm",
+  "sortOrder": 2,
+  "seoAlias": "thuc-pham",
+  "isActive": true
+}
+
+### 3.5 Tạo danh mục tự động generate SEO Alias
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Bánh kẹo",
+  "sortOrder": 3,
+  "isActive": true
+}
+
+### 3.6 ❌ Tạo danh mục không có tên (Expected: 400)
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "sortOrder": 1,
+  "isActive": true
+}
+
+### 3.7 ❌ Tạo danh mục cha không tồn tại (Expected: 400)
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Test Category",
+  "parentId": 99999,
+  "isActive": true
+}
+
+### 3.8 ❌ Cashier không được tạo (Expected: 403)
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "name": "Cashier Category",
+  "isActive": true
+}
+
+### ============================================
+### ✏️ 4. CẬP NHẬT DANH MỤC
+### Yêu cầu: Permission "categories.update"
+### ============================================
+
+### 4.1 Cập nhật tên danh mục - Admin
+PUT {{baseUrl}}/api/categories/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Đồ uống giải khát"
+}
+
+### 4.2 Cập nhật SEO - Manager
+PUT {{baseUrl}}/api/categories/1
+Content-Type: application/json
+Authorization: Bearer {{managerToken}}
+
+{
+  "seoTitle": "Đồ uống giải khát - Siêu thị Mini",
+  "seoDescription": "Nước ngọt, nước suối, nước tăng lực",
+  "sortOrder": 1
+}
+
+### 4.3 Cập nhật parentId (di chuyển danh mục)
+PUT {{baseUrl}}/api/categories/2
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "parentId": null,
+  "sortOrder": 5
+}
+
+### 4.4 ❌ Cập nhật danh mục không tồn tại (Expected: 404)
+PUT {{baseUrl}}/api/categories/99999
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Test"
+}
+
+### 4.5 ❌ Cập nhật parentId không tồn tại (Expected: 400)
+PUT {{baseUrl}}/api/categories/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "parentId": 99999
+}
+
+### 4.6 ❌ Tạo vòng lặp parent-child (Expected: 400)
+# Giả sử ID 1 là cha của ID 2, không thể chuyển 1 thành con của 2
+PUT {{baseUrl}}/api/categories/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "parentId": 2
+}
+
+### 4.7 ❌ Cashier không được cập nhật (Expected: 403)
+PUT {{baseUrl}}/api/categories/1
+Content-Type: application/json
+Authorization: Bearer {{cashierToken}}
+
+{
+  "name": "Cashier Update"
+}
+
+### ============================================
+### 🗑️ 5. XÓA DANH MỤC
+### Yêu cầu: Permission "categories.delete"
+### ============================================
+
+### 5.1 Xóa danh mục không có con và sản phẩm - Admin
+# Soft delete: set IsActive = false
+DELETE {{baseUrl}}/api/categories/5
+Authorization: Bearer {{adminToken}}
+
+### 5.2 ❌ Xóa danh mục có sản phẩm (Expected: 400)
+DELETE {{baseUrl}}/api/categories/1
+Authorization: Bearer {{adminToken}}
+
+### 5.3 ❌ Xóa danh mục có danh mục con (Expected: 400)
+DELETE {{baseUrl}}/api/categories/1
+Authorization: Bearer {{adminToken}}
+
+### 5.4 ❌ Cashier không được xóa (Expected: 403)
+DELETE {{baseUrl}}/api/categories/2
+Authorization: Bearer {{cashierToken}}
+
+### 5.5 ❌ Xóa danh mục không tồn tại (Expected: 404)
+DELETE {{baseUrl}}/api/categories/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ❌ 6. TEST KHÔNG TOKEN / TOKEN KHÔNG HỢP LỆ
+### ============================================
+
+### 6.1 Tạo không token (Expected: 401)
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "No Token Category"
+}
+
+### 6.2 Cập nhật không token (Expected: 401)
+PUT {{baseUrl}}/api/categories/1
+Content-Type: application/json
+
+{
+  "name": "No Token Update"
+}
+
+### 6.3 Xóa không token (Expected: 401)
+DELETE {{baseUrl}}/api/categories/1
+
+### 6.4 Token không hợp lệ (Expected: 401)
+GET {{baseUrl}}/api/categories/1
+Authorization: Bearer invalid_token_here
+
+### ============================================
+### 🔄 7. TEST CONCURRENCY VÀ VALIDATION
+### ============================================
+
+### 7.1 Tạo danh mục với tên rất dài (200+ chars) - Validation
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "AbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnopqrstuvwxyz",
+  "isActive": true
+}
+
+### 7.2 Tạo danh mục với sortOrder âm - Validation
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Test Negative Sort",
+  "sortOrder": -1,
+  "isActive": true
+}
+
+### ============================================
+### ✅ CHECKLIST TEST HOÀN CHỈNH
+### ============================================
+### 
+### 📖 Lấy Danh Mục (Public):
+### [ ] 2.1 Lấy tất cả danh mục → 200 OK + tree structure
+### [ ] 2.2 Lấy danh mục gốc → 200 OK
+### [ ] 2.3 Lấy chi tiết → 200 OK
+### [ ] 2.4 Chi tiết không tồn tại → 404
+### [ ] 2.5 Lấy sản phẩm theo danh mục → 200 OK + phân trang
+### [ ] 2.6 Sản phẩm danh mục không tồn tại → 404
+###
+### ➕ Tạo Danh Mục:
+### [ ] 3.1 Admin tạo thành công
+### [ ] 3.2 Manager tạo thành công
+### [ ] 3.3 Tạo danh mục con
+### [ ] 3.4 Auto generate SEO Alias
+### [ ] 3.5 ❌ Không có tên → 400
+### [ ] 3.6 ❌ Cha không tồn tại → 400
+### [ ] 3.7 ❌ Cashier tạo → 403
+###
+### ✏️ Cập Nhật:
+### [ ] 4.1 Admin cập nhật thành công
+### [ ] 4.2 Manager cập nhật thành công
+### [ ] 4.3 Di chuyển danh mục (đổi parent)
+### [ ] 4.4 ❌ Không tồn tại → 404
+### [ ] 4.5 ❌ Parent không tồn tại → 400
+### [ ] 4.6 ❌ Tạo vòng lặp → 400
+### [ ] 4.7 ❌ Cashier cập nhật → 403
+###
+### 🗑️ Xóa:
+### [ ] 5.1 Xóa thành công (soft delete)
+### [ ] 5.2 ❌ Có sản phẩm → 400
+### [ ] 5.3 ❌ Có danh mục con → 400
+### [ ] 5.4 ❌ Cashier xóa → 403
+### [ ] 5.5 ❌ Không tồn tại → 404
+###
+### 🔒 Security:
+### [ ] 6.1-6.3 Không token → 401
+### [ ] 6.4 Token invalid → 401
+###
+### 📋 Validation:
+### [ ] 7.1 Tên quá dài → 400
+### [ ] 7.2 SortOrder âm → 400
+###
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+###
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy theo thứ tự:
+###    - Đầu tiên: Login (1.1, 1.2, 1.3) để lấy token
+###    - Copy token vào các biến @xxxToken
+###    - Sau đó chạy các test khác
+###
+### LƯU Ý:
+### - Các API GET là public, không cần token
+### - POST/PUT/DELETE cần token với quyền phù hợp
+### - Category có cấu trúc tree (parent-child)
+### - Xóa là soft delete (IsActive = false)
+###
+### ============================================

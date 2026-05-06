@@ -1,0 +1,248 @@
+### ============================================
+### 🧪 TEST PAYMENT ACCOUNTS API - SuperMarketMini
+### ============================================
+
+@baseUrl = http://localhost:5000
+@adminToken = 
+@managerToken = 
+@cashierToken = 
+
+### ============================================
+### 🔐 1. LOGIN (Chạy trước để lấy token)
+### ============================================
+
+### 1.1 Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin@123"
+}
+
+### 1.2 Login Cashier
+# @name loginCashier
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "cashier",
+  "password": "Cashier@123"
+}
+
+### ============================================
+### 💳 2. GET ALL PAYMENT ACCOUNTS
+### ============================================
+
+### 2.1 Admin - Get All Accounts (Expected: 200 OK)
+GET {{baseUrl}}/api/paymentaccounts
+Authorization: Bearer {{adminToken}}
+
+### 2.2 Cashier - Get Accounts (Expected: 200 OK - có invoices.view permission)
+GET {{baseUrl}}/api/paymentaccounts
+Authorization: Bearer {{cashierToken}}
+
+### 2.3 No Token - Get Accounts (Expected: 401 Unauthorized)
+GET {{baseUrl}}/api/paymentaccounts
+
+### ============================================
+### ⭐ 3. GET DEFAULT ACCOUNT
+### ============================================
+
+### 3.1 Admin - Get Default Account (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/paymentaccounts/default
+Authorization: Bearer {{adminToken}}
+
+### 3.2 Cashier - Get Default Account (Expected: 200 OK)
+GET {{baseUrl}}/api/paymentaccounts/default
+Authorization: Bearer {{cashierToken}}
+
+### ============================================
+### 🔍 4. GET ACCOUNT BY ID
+### ============================================
+
+### 4.1 Admin - Get Account by ID (Expected: 200 OK or 404)
+GET {{baseUrl}}/api/paymentaccounts/1
+Authorization: Bearer {{adminToken}}
+
+### 4.2 Admin - Get Non-existent Account (Expected: 404 Not Found)
+GET {{baseUrl}}/api/paymentaccounts/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### ➕ 5. CREATE PAYMENT ACCOUNT
+### ============================================
+
+### 5.1 Admin - Create Account Success (Expected: 200 OK)
+POST {{baseUrl}}/api/paymentaccounts
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountName": "TK Test Vietcombank",
+  "accountHolderName": "NGUYEN VAN TEST",
+  "accountNumber": "123456789012",
+  "bankName": "Vietcombank",
+  "bankBin": "970436",
+  "bankCode": "VCB",
+  "isDefault": false,
+  "description": "Tài khoản test thanh toán"
+}
+
+### 5.2 Admin - Create Account as Default (Expected: 200 OK)
+POST {{baseUrl}}/api/paymentaccounts
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountName": "TK Default Test",
+  "accountHolderName": "CONG TY TEST",
+  "accountNumber": "987654321098",
+  "bankName": "Techcombank",
+  "bankBin": "970407",
+  "bankCode": "TCB",
+  "isDefault": true,
+  "description": "Tài khoản mặc định test"
+}
+
+### 5.3 Admin - Create Account without Required Fields (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/paymentaccounts
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountName": "Invalid Account"
+}
+
+### 5.4 Admin - Create Account with Invalid BIN (Expected: 400 Bad Request)
+POST {{baseUrl}}/api/paymentaccounts
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountName": "TK Invalid BIN",
+  "accountHolderName": "TEST USER",
+  "accountNumber": "123456789",
+  "bankName": "Test Bank",
+  "bankBin": "12345",
+  "bankCode": "TEST"
+}
+
+### ============================================
+### ✏️ 6. UPDATE PAYMENT ACCOUNT
+### ============================================
+
+### 6.1 Admin - Update Account (Expected: 200 OK)
+PUT {{baseUrl}}/api/paymentaccounts/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountName": "TK Đã Cập Nhật",
+  "accountHolderName": "NGUYEN VAN UPDATE",
+  "description": "Thông tin đã cập nhật"
+}
+
+### 6.2 Admin - Set Account as Default via Update (Expected: 200 OK)
+PUT {{baseUrl}}/api/paymentaccounts/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "isDefault": true
+}
+
+### 6.3 Admin - Deactivate Account (Expected: 200 OK)
+PUT {{baseUrl}}/api/paymentaccounts/1
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "isActive": false
+}
+
+### 6.4 Admin - Update Non-existent Account (Expected: 404 Not Found)
+PUT {{baseUrl}}/api/paymentaccounts/99999
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "accountName": "Non Existent"
+}
+
+### ============================================
+### ⭐ 7. SET DEFAULT ACCOUNT
+### ============================================
+
+### 7.1 Admin - Set Default Account (Expected: 200 OK)
+POST {{baseUrl}}/api/paymentaccounts/1/set-default
+Authorization: Bearer {{adminToken}}
+
+### 7.2 Admin - Set Non-existent as Default (Expected: 404 Not Found)
+POST {{baseUrl}}/api/paymentaccounts/99999/set-default
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🗑️ 8. DELETE PAYMENT ACCOUNT
+### ============================================
+
+### 8.1 Admin - Delete Non-default Account (Expected: 200 OK)
+DELETE {{baseUrl}}/api/paymentaccounts/2
+Authorization: Bearer {{adminToken}}
+
+### 8.2 Admin - Delete Default Account (Expected: 400 Bad Request)
+DELETE {{baseUrl}}/api/paymentaccounts/1
+Authorization: Bearer {{adminToken}}
+
+### 8.3 Admin - Delete Non-existent Account (Expected: 404 Not Found)
+DELETE {{baseUrl}}/api/paymentaccounts/99999
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 📝 HƯỚNG DẪN SỬ DỤNG
+### ============================================
+### 
+### 1. Cài đặt VS Code extension "REST Client"
+### 2. Chạy các request Login đầu tiên để lấy token
+### 3. Copy token vào biến tương ứng
+### 4. Chạy các request test theo thứ tự
+###
+### ============================================
+### ✅ CHECKLIST TEST
+### ============================================
+### 
+### GET ALL:
+### [ ] Admin get all accounts → 200 OK
+### [ ] Cashier get accounts → 200 OK
+### [ ] No token → 401 Unauthorized
+###
+### GET DEFAULT:
+### [ ] Get default account → 200 OK
+### [ ] Get default when none set → 404 Not Found
+###
+### GET BY ID:
+### [ ] Get existing account → 200 OK
+### [ ] Get non-existent → 404 Not Found
+###
+### CREATE:
+### [ ] Create valid account → 200 OK
+### [ ] Create default account → 200 OK
+### [ ] Create missing required fields → 400 Bad Request
+### [ ] Create with invalid BIN → 400 Bad Request
+###
+### UPDATE:
+### [ ] Update account → 200 OK
+### [ ] Set as default → 200 OK
+### [ ] Deactivate account → 200 OK
+### [ ] Update non-existent → 404 Not Found
+###
+### SET DEFAULT:
+### [ ] Set default → 200 OK
+### [ ] Set non-existent → 404 Not Found
+###
+### DELETE:
+### [ ] Delete non-default → 200 OK
+### [ ] Delete default → 400 Bad Request
+### [ ] Delete non-existent → 404 Not Found
+###
