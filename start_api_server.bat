@@ -5,7 +5,7 @@ echo  KHOI DONG API SERVER - SuperMarketMini
 echo ===========================================
 echo.
 echo Dang build project...
-cd /d D:\SuperMakretMini\SuperMarketMini\SuperMarketMini
+cd /d E:\SuperMarket\SuperMarketMini\SuperMarketMini
 dotnet build --verbosity quiet
 if %errorlevel% neq 0 (
     echo.

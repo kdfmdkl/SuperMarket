@@ -1,5 +1,5 @@
 @echo off
-cd /d D:\SuperMakretMini\SuperMarketMini\SuperMarketMini
+cd /d E:\SuperMarket\SuperMarketMini\SuperMarketMini
 start dotnet run --urls "http://localhost:5000"
 timeout /t 3 /nobreak >nul
 echo.

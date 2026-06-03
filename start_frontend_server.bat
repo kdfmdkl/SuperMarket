@@ -7,6 +7,6 @@ echo Access points:
 echo - Login: http://localhost:8080/index.html
 echo - Dashboard: http://localhost:8080/dashboard.html
 echo.
-cd /d D:\SuperMakretMini\frontend
+cd /d E:\SuperMarket\SuperMarketMini\frontend
 python -m http.server 8080
 pause
